@@ -117,7 +117,6 @@ func TestNormalizerOptions(t *testing.T) {
 	}
 }
 
-
 func TestNormalizerReplacementManagement(t *testing.T) {
 	normalizer := NewNormalizer()
 
@@ -161,7 +160,6 @@ func TestNormalizerEmpty(t *testing.T) {
 		t.Error("Expected no normalization for empty string")
 	}
 }
-
 
 // TestRewriteDefParser tests the rewrite.def parser functionality
 func TestRewriteDefParser(t *testing.T) {
@@ -256,7 +254,6 @@ func TestStringReplacer(t *testing.T) {
 		})
 	}
 }
-
 
 // BenchmarkStringReplacer benchmarks string replacer performance
 func BenchmarkStringReplacer(b *testing.B) {

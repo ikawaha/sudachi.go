@@ -1,27 +1,22 @@
 package dic
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
-
-	error2 "github.com/ikawaha/sudachi.go/error"
 )
 
 // LoadUnknownWordDefinitionsFromFile loads unknown word definitions from unk.def file
 func LoadUnknownWordDefinitionsFromFile(unkDefPath string, charCategory *CharacterCategory) (*UnknownWordDefinitions, error) {
 	file, err := os.Open(unkDefPath)
 	if err != nil {
-		return nil, error2.NewErrWithContext(
-			"failed to open unk.def file",
-			err.Error())
+		return nil, fmt.Errorf("failed to open unk.def file, %s: %w", unkDefPath, err)
 	}
 	defer file.Close()
 
 	uwd := NewUnknownWordDefinitions()
 	if err := uwd.LoadFromReader(file, charCategory); err != nil {
-		return nil, error2.NewErrWithContext(
-			"failed to parse unk.def file",
-			err.Error())
+		return nil, fmt.Errorf("failed to parse unk.def file, %s: %w", unkDefPath, err)
 	}
 
 	return uwd, nil

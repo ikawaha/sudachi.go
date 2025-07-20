@@ -464,7 +464,6 @@ func TestInputBufferComprehensive(t *testing.T) {
 		}
 	})
 
-
 	t.Run("Character to byte mapping", func(t *testing.T) {
 		buffer := NewInputBuffer()
 		text := "Hello"
@@ -654,7 +653,7 @@ func TestInputBufferComprehensive(t *testing.T) {
 			if i > 0 {
 				buffer.Reset() // Reset buffer for reuse
 			}
-			
+
 			err := buffer.StartBuild(text)
 			if err != nil {
 				t.Fatalf("Failed to start build %d: %v", i, err)
@@ -671,7 +670,6 @@ func TestInputBufferComprehensive(t *testing.T) {
 		}
 	})
 }
-
 
 // TestGetOriginalText tests original text retrieval - ported from Rust test_ported.rs
 func TestGetOriginalText(t *testing.T) {

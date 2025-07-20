@@ -42,9 +42,9 @@ func NewStringReplacer(rules map[string]string) *StringReplacer {
 
 		// Get first character
 		firstChar, _ := utf8.DecodeRuneInString(before)
-		
+
 		replacer.patterns[firstChar] = append(replacer.patterns[firstChar], pattern)
-		
+
 		if pattern.Length > replacer.maxPatternLength {
 			replacer.maxPatternLength = pattern.Length
 		}
@@ -76,7 +76,7 @@ func (sr *StringReplacer) Replace(input string) string {
 	i := 0
 	for i < len(inputRunes) {
 		char := inputRunes[i]
-		
+
 		// Check if this character starts any pattern
 		patterns, exists := sr.patterns[char]
 		if !exists {
@@ -117,7 +117,7 @@ func (sr *StringReplacer) Replace(input string) string {
 // matchesAt checks if pattern matches at the given position in the input
 func (sr *StringReplacer) matchesAt(inputRunes []rune, pos int, pattern string) bool {
 	patternRunes := []rune(pattern)
-	
+
 	if pos+len(patternRunes) > len(inputRunes) {
 		return false
 	}
@@ -163,7 +163,7 @@ func (sr *StringReplacer) ReplaceWithMapping(input string) (string, []int) {
 	i := 0
 	for i < len(inputRunes) {
 		char := inputRunes[i]
-		
+
 		patterns, exists := sr.patterns[char]
 		if !exists {
 			result.WriteRune(char)
@@ -181,7 +181,7 @@ func (sr *StringReplacer) ReplaceWithMapping(input string) (string, []int) {
 			if sr.matchesAt(inputRunes, i, pattern.Before) {
 				// Found a match, replace it
 				result.WriteString(pattern.After)
-				
+
 				// Add mapping entries for the replacement
 				afterRunes := []rune(pattern.After)
 				for j := range afterRunes {
@@ -193,7 +193,7 @@ func (sr *StringReplacer) ReplaceWithMapping(input string) (string, []int) {
 						charMapping = append(charMapping, i)
 					}
 				}
-				
+
 				i += pattern.Length
 				matched = true
 				break

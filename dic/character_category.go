@@ -299,7 +299,6 @@ func (cc *CharacterCategory) parseCategoryDefinitionLine(line string, lineNum in
 	return nil
 }
 
-
 // parseCategoryName parses a category name and returns the corresponding CategoryType
 func (cc *CharacterCategory) parseCategoryName(name string) (CategoryType, error) {
 	switch name {
@@ -476,11 +475,11 @@ func (cc *CharacterCategory) GetCategory(r rune) CategoryType {
 	}
 
 	codepoint := uint32(r)
-	
+
 	// Binary search to find the appropriate category
 	// This matches Rust's binary_search behavior
 	left, right := 0, len(cc.boundaries)-1
-	
+
 	for left <= right {
 		mid := (left + right) / 2
 		if cc.boundaries[mid] == codepoint {
@@ -495,12 +494,12 @@ func (cc *CharacterCategory) GetCategory(r rune) CategoryType {
 			right = mid - 1
 		}
 	}
-	
+
 	// Not found - return category for the insertion point
 	if left < len(cc.categories) {
 		return cc.categories[left]
 	}
-	
+
 	return CategoryDefault
 }
 
@@ -528,4 +527,3 @@ func (cc *CharacterCategory) GetCategoryInfo(categoryType CategoryType) *Categor
 	}
 	return nil // Rust equivalent: None case
 }
-

@@ -11,6 +11,7 @@ import (
 )
 
 // Embedded rewrite.def file (matching Rust version's include_bytes!)
+//
 //go:embed rewrite.def
 var embeddedRewriteDef []byte
 
@@ -97,7 +98,6 @@ func ParseRewriteDefFromBytes(data []byte) (*RewriteDefData, error) {
 func GetDefaultRewriteDefData() (*RewriteDefData, error) {
 	return ParseRewriteDefFromBytes(embeddedRewriteDef)
 }
-
 
 // ValidateRewriteDefData validates parsed rewrite.def data
 func ValidateRewriteDefData(data *RewriteDefData) error {

@@ -169,7 +169,7 @@ func TestPluginConfig_GetOOVProviderPluginConfig(t *testing.T) {
 			expectedNil: true,
 		},
 	}
- 
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			result := test.config.GetOOVProviderPluginConfig()

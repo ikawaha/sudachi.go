@@ -182,7 +182,7 @@ func TestLexiconLookupHi(t *testing.T) {
 	// Test 1: "贔" lookup - investigating why this fails in Go but works in Rust
 	input := []byte("贔")
 	t.Logf("Testing character '贔' (bytes: %v, hex: %x)", input, input)
-	
+
 	iter, err := lexicon.Lookup(input, 0)
 	if err != nil {
 		t.Fatalf("Failed to lookup '贔': %v", err)
@@ -206,7 +206,7 @@ func TestLexiconLookupHi(t *testing.T) {
 	// Test 2: "贔負" lookup - the compound word that causes compatibility issues
 	input2 := []byte("贔負")
 	t.Logf("Testing compound word '贔負' (bytes: %v, hex: %x)", input2, input2)
-	
+
 	iter2, err := lexicon.Lookup(input2, 0)
 	if err != nil {
 		t.Fatalf("Failed to lookup '贔負': %v", err)
