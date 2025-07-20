@@ -299,7 +299,7 @@ func (ib *InputBuffer) ByteCount() int {
 // GetChar returns the character at the given character index
 func (ib *InputBuffer) GetChar(charIdx int) (rune, error) {
 	if charIdx < 0 || charIdx >= len(ib.modChars) {
-		return 0, fmt.Errorf("index %d out of bounds [0, %d)", charIdx, len(ib.modChars))
+		return 0, fmt.Errorf("index out of bounds [0, %d): %d", len(ib.modChars), charIdx)
 	}
 	return ib.modChars[charIdx], nil
 }
@@ -307,7 +307,7 @@ func (ib *InputBuffer) GetChar(charIdx int) (rune, error) {
 // GetCategory returns the character category at the given character index
 func (ib *InputBuffer) GetCategory(charIdx int) (dic.CategoryType, error) {
 	if charIdx < 0 || charIdx >= len(ib.modCat) {
-		return dic.CategoryDefault, fmt.Errorf("index %d out of bounds [0, %d)", charIdx, len(ib.modCat))
+		return dic.CategoryDefault, fmt.Errorf("index out of bounds [0, %d): %d", len(ib.modCat), charIdx)
 	}
 	return ib.modCat[charIdx], nil
 }
@@ -315,7 +315,7 @@ func (ib *InputBuffer) GetCategory(charIdx int) (dic.CategoryType, error) {
 // GetCategoryContinuity returns the category continuity at the given character index
 func (ib *InputBuffer) GetCategoryContinuity(charIdx int) (int, error) {
 	if charIdx < 0 || charIdx >= len(ib.modCatContinuity) {
-		return 0, fmt.Errorf("index %d out of bounds [0, %d)", charIdx, len(ib.modCatContinuity))
+		return 0, fmt.Errorf("index out of bounds [0, %d): %d", len(ib.modCatContinuity), charIdx)
 	}
 	return ib.modCatContinuity[charIdx], nil
 }
@@ -340,8 +340,7 @@ func (ib *InputBuffer) SetModified(modified string) error {
 // CharToByteIndex converts character index to byte index
 func (ib *InputBuffer) CharToByteIndex(charIdx int) (int, error) {
 	if charIdx < 0 || charIdx >= len(ib.modC2B) {
-		return 0, fmt.Errorf("index %d out of bounds [0, %d)", charIdx, len(ib.modC2B))
-
+		return 0, fmt.Errorf("index out of bounds [0, %d): %d", len(ib.modC2B), charIdx)
 	}
 	return ib.modC2B[charIdx], nil
 }
@@ -349,7 +348,7 @@ func (ib *InputBuffer) CharToByteIndex(charIdx int) (int, error) {
 // ByteToCharIndex converts byte index to character index
 func (ib *InputBuffer) ByteToCharIndex(byteIdx int) (int, error) {
 	if byteIdx < 0 || byteIdx >= len(ib.modB2C) {
-		return 0, fmt.Errorf("index %d out of bounds [0, %d)", byteIdx, len(ib.modC2B))
+		return 0, fmt.Errorf("index out of bounds [0, %d): %d", len(ib.modB2C), byteIdx)
 	}
 	return ib.modB2C[byteIdx], nil
 }
@@ -357,7 +356,7 @@ func (ib *InputBuffer) ByteToCharIndex(byteIdx int) (int, error) {
 // ModifiedToOriginalIndex converts modified text byte index to original text byte index
 func (ib *InputBuffer) ModifiedToOriginalIndex(modifiedIdx int) (int, error) {
 	if modifiedIdx < 0 || modifiedIdx >= len(ib.m2o) {
-		return 0, fmt.Errorf("index %d out of bounds [0, %d)", modifiedIdx, len(ib.m2o))
+		return 0, fmt.Errorf("index out of bounds [0, %d): %d", len(ib.m2o), modifiedIdx)
 	}
 	return ib.m2o[modifiedIdx], nil
 }
