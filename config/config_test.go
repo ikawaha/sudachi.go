@@ -62,19 +62,20 @@ func TestResolvePaths_Cfg(t *testing.T) {
 // TestBuilder_Fallback tests configuration fallback (Rust version: config_builder_fallback)
 func TestBuilder_Fallback(t *testing.T) {
 	// Create first builder with a path set
-	builder1 := &Builder{
-		Path: "test",
+	testPath := "test"
+	builder1 := &ConfigBuilder{
+		PathField: &testPath,
 	}
 
 	// Create empty second builder
-	builder2 := &Builder{}
+	builder2 := &ConfigBuilder{}
 
 	// Apply fallback
 	result := builder2.Fallback(builder1)
 
 	// The result should have the path from builder1
-	if result.Path != "test" {
-		t.Errorf("Expected path 'test', got '%s'", result.Path)
+	if result.PathField == nil || *result.PathField != "test" {
+		t.Errorf("Expected path 'test', got '%v'", result.PathField)
 	}
 }
 

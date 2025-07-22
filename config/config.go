@@ -17,6 +17,7 @@ const (
 )
 
 // SurfaceProjection represents the surface projection mode
+// Matches Rust: #[derive(Deserialize, Clone, Copy, Debug, Eq, PartialEq, Default)]
 type SurfaceProjection int
 
 const (
@@ -29,57 +30,45 @@ const (
 	NormalizedNouns
 )
 
-type SurfaceProjectionString = string
-
-const (
-	SurfaceString              SurfaceProjectionString = "surface"
-	NormalizedString           SurfaceProjectionString = "normalized"
-	ReadingString              SurfaceProjectionString = "reading"
-	DictionaryString           SurfaceProjectionString = "dictionary"
-	DictionaryAndSurfaceString SurfaceProjectionString = "dictionary_and_surface"
-	NormalizedAndSurfaceString SurfaceProjectionString = "normalized_and_surface"
-	NormalizedNounsString      SurfaceProjectionString = "normalized_nouns"
-	UnknownString              SurfaceProjectionString = "unknown"
-)
-
 // String returns the string representation of the surface projection
 func (sp SurfaceProjection) String() string {
 	switch sp {
 	case Surface:
-		return SurfaceString
+		return "surface"
 	case Normalized:
-		return NormalizedString
+		return "normalized"
 	case Reading:
-		return ReadingString
+		return "reading"
 	case Dictionary:
-		return DictionaryString
+		return "dictionary"
 	case DictionaryAndSurface:
-		return DictionaryAndSurfaceString
+		return "dictionary_and_surface"
 	case NormalizedAndSurface:
-		return NormalizedAndSurfaceString
+		return "normalized_and_surface"
 	case NormalizedNouns:
-		return NormalizedNounsString
+		return "normalized_nouns"
 	default:
-		return UnknownString
+		return "unknown"
 	}
 }
 
 // ParseSurfaceProjection parses a string into a SurfaceProjection
+// Matches Rust: impl TryFrom<&str> for SurfaceProjection
 func ParseSurfaceProjection(s string) (SurfaceProjection, error) {
 	switch s {
-	case SurfaceString:
+	case "surface":
 		return Surface, nil
-	case NormalizedString:
+	case "normalized":
 		return Normalized, nil
-	case ReadingString:
+	case "reading":
 		return Reading, nil
-	case DictionaryString:
+	case "dictionary":
 		return Dictionary, nil
-	case DictionaryAndSurfaceString:
+	case "dictionary_and_surface":
 		return DictionaryAndSurface, nil
-	case NormalizedAndSurfaceString:
+	case "normalized_and_surface":
 		return NormalizedAndSurface, nil
-	case NormalizedNounsString:
+	case "normalized_nouns":
 		return NormalizedNouns, nil
 	default:
 		return Surface, fmt.Errorf("unknown projection: %s", s)
@@ -87,18 +76,21 @@ func ParseSurfaceProjection(s string) (SurfaceProjection, error) {
 }
 
 // PathResolver manages multiple root paths for resolving relative paths
+// Matches Rust: #[derive(Default, Debug, Clone)] struct PathResolver
 type PathResolver struct {
 	roots []string
 }
 
 // NewPathResolver creates a new PathResolver with the given capacity
-func NewPathResolver(capacity int) *PathResolver {
-	return &PathResolver{
+// Matches Rust: fn with_capacity(capacity: usize) -> PathResolver
+func NewPathResolver(capacity int) PathResolver {
+	return PathResolver{
 		roots: make([]string, 0, capacity),
 	}
 }
 
 // Add adds a root path to the resolver
+// Matches Rust: fn add<P: Into<PathBuf>>(&mut self, path: P)
 func (pr *PathResolver) Add(path string) {
 	if !pr.Contains(path) {
 		pr.roots = append(pr.roots, path)
@@ -106,6 +98,7 @@ func (pr *PathResolver) Add(path string) {
 }
 
 // Contains checks if a path is already in the resolver
+// Matches Rust: fn contains<P: AsRef<Path>>(&self, path: P) -> bool
 func (pr *PathResolver) Contains(path string) bool {
 	for _, root := range pr.roots {
 		if root == path {
@@ -116,6 +109,7 @@ func (pr *PathResolver) Contains(path string) bool {
 }
 
 // FirstExisting returns the first existing path from all candidates
+// Matches Rust: pub fn first_existing<P: AsRef<Path> + Clone>(&self, path: P) -> Option<PathBuf>
 func (pr *PathResolver) FirstExisting(path string) (string, bool) {
 	for _, candidate := range pr.AllCandidates(path) {
 		if _, err := os.Stat(candidate); err == nil {
@@ -126,6 +120,7 @@ func (pr *PathResolver) FirstExisting(path string) (string, bool) {
 }
 
 // AllCandidates returns all possible candidate paths
+// Matches Rust: pub fn all_candidates<'a, P: AsRef<Path> + Clone + 'a>
 func (pr *PathResolver) AllCandidates(path string) []string {
 	candidates := make([]string, 0, len(pr.roots))
 	for _, root := range pr.roots {
@@ -135,20 +130,23 @@ func (pr *PathResolver) AllCandidates(path string) []string {
 }
 
 // Roots returns the root paths
+// Matches Rust: pub fn roots(&self) -> &[PathBuf]
 func (pr *PathResolver) Roots() []string {
 	return pr.roots
 }
 
 // ResolutionFailure returns an error for path resolution failure
+// Matches Rust: pub fn resolution_failure<P: AsRef<Path> + Clone>(&self, path: P) -> ConfigError
 func (pr *PathResolver) ResolutionFailure(path string) error {
 	candidates := pr.AllCandidates(path)
-	return fmt.Errorf("failed to resolve relative path %s: tried: %v", path, candidates)
+	return fmt.Errorf("failed to resolve relative path %q, tried: %v", path, candidates)
 }
 
 // Config represents the complete configuration
+// Matches Rust: pub struct Config
 type Config struct {
-	resolver                *PathResolver
-	SystemDict              string
+	resolver                PathResolver
+	SystemDict              *string
 	UserDicts               []string
 	CharacterDefinitionFile string
 	ConnectionCostPlugins   []map[string]any
@@ -158,23 +156,37 @@ type Config struct {
 	Projection              SurfaceProjection
 }
 
-// Builder represents the raw configuration from JSON
-type Builder struct {
-	Path                    string           `json:"path,omitempty"`
-	ResourcePath            string           `json:"-"`
-	RootDirectory           string           `json:"-"`
-	SystemDict              string           `json:"systemDict,omitempty"`
-	UserDict                []string         `json:"userDict,omitempty"`
-	CharacterDefinitionFile string           `json:"characterDefinitionFile,omitempty"`
-	ConnectionCostPlugin    []map[string]any `json:"connectionCostPlugin,omitempty"`
-	InputTextPlugin         []map[string]any `json:"inputTextPlugin,omitempty"`
-	OovProviderPlugin       []map[string]any `json:"oovProviderPlugin,omitempty"`
-	PathRewritePlugin       []map[string]any `json:"pathRewritePlugin,omitempty"`
-	Projection              string           `json:"projection,omitempty"`
+// ConfigBuilder represents the raw configuration from JSON
+// Matches Rust: pub struct ConfigBuilder with #[allow(non_snake_case)]
+type ConfigBuilder struct {
+	PathField                    *string          `json:"path,omitempty"`
+	ResourcePathField            *string          `json:"-"`
+	RootDirectoryField           *string          `json:"-"`
+	SystemDictField              *string          `json:"systemDict,omitempty"`
+	SystemDictAlias              *string          `json:"system,omitempty"` // Matches Rust: #[serde(alias = "system")]
+	UserDictField                []string         `json:"userDict,omitempty"`
+	UserDictAlias                []string         `json:"user,omitempty"` // Matches Rust: #[serde(alias = "user")]
+	CharacterDefinitionFileField *string          `json:"characterDefinitionFile,omitempty"`
+	ConnectionCostPluginField    []map[string]any `json:"connectionCostPlugin,omitempty"`
+	InputTextPluginField         []map[string]any `json:"inputTextPlugin,omitempty"`
+	OovProviderPluginField       []map[string]any `json:"oovProviderPlugin,omitempty"`
+	PathRewritePluginField       []map[string]any `json:"pathRewritePlugin,omitempty"`
+	ProjectionField              *string          `json:"projection,omitempty"`
 }
 
-// FromFile creates a Builder from a file
-func FromFile(configFile string) (*Builder, error) {
+// FromOptFile creates a ConfigBuilder from an optional file path
+// Matches Rust: pub fn from_opt_file(config_file: Option<&Path>) -> Result<Self, ConfigError>
+func FromOptFile(configFile *string) (*ConfigBuilder, error) {
+	if configFile == nil {
+		defaultConfig := DefaultConfigLocation()
+		return FromFile(defaultConfig)
+	}
+	return FromFile(*configFile)
+}
+
+// FromFile creates a ConfigBuilder from a file
+// Matches Rust: pub fn from_file(config_file: &Path) -> Result<Self, ConfigError>
+func FromFile(configFile string) (*ConfigBuilder, error) {
 	file, err := os.Open(configFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open config file: %w", err)
@@ -186,156 +198,226 @@ func FromFile(configFile string) (*Builder, error) {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	var builder Builder
+	var builder ConfigBuilder
 	if err := json.Unmarshal(data, &builder); err != nil {
-		return nil, fmt.Errorf("failed to parse config JSON: %w", err)
+		return nil, fmt.Errorf("serialization error: %w", err)
 	}
 
-	// Set root directory from config file path
+	// Set root directory from config file path (matches Rust behavior)
 	if dir := filepath.Dir(configFile); dir != "." {
-		builder.RootDirectory = dir
+		builder.RootDirectoryField = &dir
 	}
 
 	return &builder, nil
 }
 
-// FromOptFile creates a Builder from an optional file path
-func FromOptFile(configFile *string) (*Builder, error) {
-	if configFile == nil {
-		defaultConfig := DefaultConfigLocation()
-		return FromFile(defaultConfig)
+// FromBytes creates a ConfigBuilder from byte data
+// Matches Rust: pub fn from_bytes(data: &[u8]) -> Result<Self, ConfigError>
+func FromBytes(data []byte) (*ConfigBuilder, error) {
+	var builder ConfigBuilder
+	if err := json.Unmarshal(data, &builder); err != nil {
+		return nil, fmt.Errorf("serialization error: %w", err)
 	}
-	return FromFile(*configFile)
+	return &builder, nil
 }
 
-// SetSystemDict sets the system dictionary path
-func (b *Builder) SetSystemDict(dict string) *Builder {
-	b.SystemDict = dict
+// Empty creates an empty ConfigBuilder
+// Matches Rust: pub fn empty() -> Self
+func Empty() *ConfigBuilder {
+	builder, _ := FromBytes([]byte("{}"))
+	return builder
+}
+
+// SystemDict sets the system dictionary path
+// Matches Rust: pub fn system_dict(mut self, dict: impl Into<PathBuf>) -> Self
+func (b *ConfigBuilder) SystemDict(dict string) *ConfigBuilder {
+	b.SystemDictField = &dict
 	return b
 }
 
-// SetUserDict adds a user dictionary path
-func (b *Builder) SetUserDict(dict string) *Builder {
-	b.UserDict = append(b.UserDict, dict)
+// UserDict adds a user dictionary path
+// Matches Rust: pub fn user_dict(mut self, dict: impl Into<PathBuf>) -> Self
+func (b *ConfigBuilder) UserDict(dict string) *ConfigBuilder {
+	b.UserDictField = append(b.UserDictField, dict)
 	return b
 }
 
-// SetResourcePath sets the resource path
-func (b *Builder) SetResourcePath(path string) *Builder {
-	b.ResourcePath = path
+// ResourcePath sets the resource path
+// Matches Rust: pub fn resource_path(mut self, path: impl Into<PathBuf>) -> Self
+func (b *ConfigBuilder) ResourcePath(path string) *ConfigBuilder {
+	b.ResourcePathField = &path
 	return b
 }
 
-// SetRootDirectory sets the root directory
-func (b *Builder) SetRootDirectory(path string) *Builder {
-	b.RootDirectory = path
+// RootDirectory sets the root directory
+// Matches Rust: pub fn root_directory(mut self, path: impl Into<PathBuf>) -> Self
+func (b *ConfigBuilder) RootDirectory(path string) *ConfigBuilder {
+	b.RootDirectoryField = &path
 	return b
 }
 
-// Build creates a Config from the Builder
-func (b *Builder) Build() (*Config, error) {
-	resourceDir := DefaultResourceDir
-	if b.ResourcePath != "" {
-		resourceDir = b.ResourcePath
+// Build creates a Config from the ConfigBuilder
+// Matches Rust: pub fn build(self) -> Config
+func (b *ConfigBuilder) Build() *Config {
+	defaultResourceDir := DefaultResourceDir
+	resourceDir := defaultResourceDir
+	if b.ResourcePathField != nil {
+		resourceDir = *b.ResourcePathField
 	}
+
 	resolver := NewPathResolver(3)
-	if b.Path != "" {
-		resolver.Add(b.Path)
-	}
-	resolver.Add(resourceDir)
-	if b.RootDirectory != "" {
-		resolver.Add(b.RootDirectory)
-	}
-	charDefFile := DefaultCharDefFile
-	if b.CharacterDefinitionFile != "" {
-		charDefFile = b.CharacterDefinitionFile
-	}
-	projection := Surface
-	if b.Projection != "" {
-		var err error
-		projection, err = ParseSurfaceProjection(b.Projection)
-		if err != nil {
-			return nil, fmt.Errorf("config error: %w", err)
+	addPath := func(path string) {
+		if !resolver.Contains(path) {
+			resolver.Add(path)
 		}
 	}
+
+	if b.PathField != nil {
+		addPath(*b.PathField)
+	}
+	addPath(resourceDir)
+	if b.RootDirectoryField != nil {
+		addPath(*b.RootDirectoryField)
+	}
+
+	charDefFile := DefaultCharDefFile
+	if b.CharacterDefinitionFileField != nil {
+		charDefFile = *b.CharacterDefinitionFileField
+	}
+
+	// Handle alias fields (matching Rust serde aliases)
+	systemDict := b.SystemDictField
+	if systemDict == nil && b.SystemDictAlias != nil {
+		systemDict = b.SystemDictAlias
+	}
+
+	userDicts := b.UserDictField
+	if len(userDicts) == 0 && len(b.UserDictAlias) > 0 {
+		userDicts = b.UserDictAlias
+	}
+
+	projection := Surface
+	if b.ProjectionField != nil {
+		if proj, err := ParseSurfaceProjection(*b.ProjectionField); err == nil {
+			projection = proj
+		}
+	}
+
+	connectionCostPlugins := b.ConnectionCostPluginField
+	if connectionCostPlugins == nil {
+		connectionCostPlugins = []map[string]any{}
+	}
+
+	inputTextPlugins := b.InputTextPluginField
+	if inputTextPlugins == nil {
+		inputTextPlugins = []map[string]any{}
+	}
+
+	oovProviderPlugins := b.OovProviderPluginField
+	if oovProviderPlugins == nil {
+		oovProviderPlugins = []map[string]any{}
+	}
+
+	pathRewritePlugins := b.PathRewritePluginField
+	if pathRewritePlugins == nil {
+		pathRewritePlugins = []map[string]any{}
+	}
+
 	return &Config{
 		resolver:                resolver,
-		SystemDict:              b.SystemDict,
-		UserDicts:               b.UserDict,
+		SystemDict:              systemDict,
+		UserDicts:               userDicts,
 		CharacterDefinitionFile: charDefFile,
-		ConnectionCostPlugins:   b.ConnectionCostPlugin,
-		InputTextPlugins:        b.InputTextPlugin,
-		OovProviderPlugins:      b.OovProviderPlugin,
-		PathRewritePlugins:      b.PathRewritePlugin,
+		ConnectionCostPlugins:   connectionCostPlugins,
+		InputTextPlugins:        inputTextPlugins,
+		OovProviderPlugins:      oovProviderPlugins,
+		PathRewritePlugins:      pathRewritePlugins,
 		Projection:              projection,
-	}, nil
+	}
 }
 
-// Fallback merges with another Builder, using the other's values as fallback
-func (b *Builder) Fallback(other *Builder) *Builder {
-	if b.Path == "" {
-		b.Path = other.Path
+// Fallback merges with another ConfigBuilder, using the other's values as fallback
+// Matches Rust: pub fn fallback(mut self, other: &ConfigBuilder) -> ConfigBuilder
+func (b *ConfigBuilder) Fallback(other *ConfigBuilder) *ConfigBuilder {
+	if b.PathField == nil {
+		b.PathField = other.PathField
 	}
-	if b.ResourcePath == "" {
-		b.ResourcePath = other.ResourcePath
+	if b.ResourcePathField == nil {
+		b.ResourcePathField = other.ResourcePathField
 	}
-	if b.RootDirectory == "" {
-		b.RootDirectory = other.RootDirectory
+	if b.RootDirectoryField == nil {
+		b.RootDirectoryField = other.RootDirectoryField
 	}
-	if b.SystemDict == "" {
-		b.SystemDict = other.SystemDict
+	if b.SystemDictField == nil {
+		b.SystemDictField = other.SystemDictField
 	}
-	if b.UserDict == nil {
-		b.UserDict = other.UserDict
+	if b.SystemDictAlias == nil {
+		b.SystemDictAlias = other.SystemDictAlias
 	}
-	if b.CharacterDefinitionFile == "" {
-		b.CharacterDefinitionFile = other.CharacterDefinitionFile
+	if b.UserDictField == nil {
+		b.UserDictField = other.UserDictField
 	}
-	if b.ConnectionCostPlugin == nil {
-		b.ConnectionCostPlugin = other.ConnectionCostPlugin
+	if b.UserDictAlias == nil {
+		b.UserDictAlias = other.UserDictAlias
 	}
-	if b.InputTextPlugin == nil {
-		b.InputTextPlugin = other.InputTextPlugin
+	if b.CharacterDefinitionFileField == nil {
+		b.CharacterDefinitionFileField = other.CharacterDefinitionFileField
 	}
-	if b.OovProviderPlugin == nil {
-		b.OovProviderPlugin = other.OovProviderPlugin
+	if b.ConnectionCostPluginField == nil {
+		b.ConnectionCostPluginField = other.ConnectionCostPluginField
 	}
-	if b.PathRewritePlugin == nil {
-		b.PathRewritePlugin = other.PathRewritePlugin
+	if b.InputTextPluginField == nil {
+		b.InputTextPluginField = other.InputTextPluginField
 	}
-	if b.Projection == "" {
-		b.Projection = other.Projection
+	if b.OovProviderPluginField == nil {
+		b.OovProviderPluginField = other.OovProviderPluginField
+	}
+	if b.PathRewritePluginField == nil {
+		b.PathRewritePluginField = other.PathRewritePluginField
+	}
+	if b.ProjectionField == nil {
+		b.ProjectionField = other.ProjectionField
 	}
 	return b
 }
 
 // DefaultConfigLocation returns the default config file location
+// Matches Rust: pub fn default_config_location() -> PathBuf
 func DefaultConfigLocation() string {
 	return filepath.Join(DefaultResourceDir, DefaultSettingFile)
 }
 
 // New creates a new Config
+// Matches Rust: pub fn new(config_file: Option<PathBuf>, resource_dir: Option<PathBuf>, dictionary_path: Option<PathBuf>) -> Result<Self, ConfigError>
 func New(configFile, resourceDir, dictionaryPath *string) (*Config, error) {
-	builder, err := FromOptFile(configFile)
+	// prioritize arg (cli option) > default
+	rawConfig, err := FromOptFile(configFile)
 	if err != nil {
 		return nil, err
 	}
+
+	// prioritize arg (cli option) > config file
 	if resourceDir != nil {
-		builder.SetResourcePath(*resourceDir)
+		rawConfig = rawConfig.ResourcePath(*resourceDir)
 	}
+
+	// prioritize arg (cli option) > config file
 	if dictionaryPath != nil {
-		builder.SetSystemDict(*dictionaryPath)
+		rawConfig = rawConfig.SystemDict(*dictionaryPath)
 	}
-	return builder.Build()
+
+	return rawConfig.Build(), nil
 }
 
 // WithSystemDict sets the system dictionary path
+// Matches Rust: pub fn with_system_dic(mut self, system: impl Into<PathBuf>) -> Config
 func (c *Config) WithSystemDict(systemDict string) *Config {
-	c.SystemDict = systemDict
+	c.SystemDict = &systemDict
 	return c
 }
 
 // ResolvePaths resolves special path patterns
+// Matches Rust: pub fn resolve_paths(&self, mut path: String) -> Vec<String>
 func (c *Config) ResolvePaths(path string) []string {
 	if strings.HasPrefix(path, "$exe") {
 		// For Go, we'll use the executable directory
@@ -362,10 +444,7 @@ func (c *Config) ResolvePaths(path string) []string {
 }
 
 // CompletePath resolves a possibly relative path
-// 1. Absolute paths stay as they are
-// 2. Paths are resolved wrt to anchors, returning the first existing one
-// 3. Paths are checked wrt to CWD
-// 4. If all fail, return an error with all candidate paths listed
+// Matches Rust: pub fn complete_path<P: AsRef<Path> + Into<PathBuf>>(&self, file_path: P) -> Result<PathBuf, ConfigError>
 func (c *Config) CompletePath(filePath string) (string, error) {
 	// 1. Absolute paths stay as they are
 	if filepath.IsAbs(filePath) {
@@ -384,14 +463,16 @@ func (c *Config) CompletePath(filePath string) (string, error) {
 }
 
 // ResolvedSystemDict returns the resolved system dictionary path
+// Matches Rust: pub fn resolved_system_dict(&self) -> Result<PathBuf, ConfigError>
 func (c *Config) ResolvedSystemDict() (string, error) {
-	if c.SystemDict == "" {
+	if c.SystemDict == nil {
 		return "", errors.New("missing required field: systemDict")
 	}
-	return c.CompletePath(c.SystemDict)
+	return c.CompletePath(*c.SystemDict)
 }
 
 // ResolvedUserDicts returns the resolved user dictionary paths
+// Matches Rust: pub fn resolved_user_dicts(&self) -> Result<Vec<PathBuf>, ConfigError>
 func (c *Config) ResolvedUserDicts() ([]string, error) {
 	resolved := make([]string, 0, len(c.UserDicts))
 	for _, userDict := range c.UserDicts {
