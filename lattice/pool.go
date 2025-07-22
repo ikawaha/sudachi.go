@@ -15,7 +15,7 @@ type NodePool struct {
 func newNodePool() *NodePool {
 	return &NodePool{
 		pool: sync.Pool{
-			New: func() interface{} {
+			New: func() any {
 				return &Node{}
 			},
 		},
@@ -65,7 +65,7 @@ type NodeResultPool struct {
 func newNodeResultPool() *NodeResultPool {
 	return &NodeResultPool{
 		pool: sync.Pool{
-			New: func() interface{} {
+			New: func() any {
 				return &NodeResult{}
 			},
 		},
@@ -122,7 +122,7 @@ type MorphemeListPool struct {
 func newMorphemeListPool() *MorphemeListPool {
 	return &MorphemeListPool{
 		pool: sync.Pool{
-			New: func() interface{} {
+			New: func() any {
 				return &MorphemeList{
 					results: make([]*NodeResult, 0, 8), // Start with capacity of 8
 				}
