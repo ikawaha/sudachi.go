@@ -7,6 +7,7 @@ import (
 
 	"github.com/ikawaha/sudachi.go/dic"
 	"github.com/ikawaha/sudachi.go/input"
+	"github.com/ikawaha/sudachi.go/plugin"
 )
 
 // IgnoreYomiganaPlugin searches katakana in brackets after kanji characters as Yomigana (読み仮名)
@@ -18,6 +19,7 @@ type IgnoreYomiganaPlugin struct {
 	rightBracketSet   map[rune]bool          // Set of right bracket characters
 	maxYomiganaLength int                    // Maximum length of yomigana
 	regex             *regexp.Regexp         // Compiled regex for matching yomigana patterns
+	debug             bool                   // Debug flag for conditional output
 }
 
 // YomiganaPluginSettings represents configuration settings for IgnoreYomiganaPlugin
@@ -37,7 +39,13 @@ func NewIgnoreYomiganaPlugin() *IgnoreYomiganaPlugin {
 		rightBracketSet:   map[rune]bool{},
 		maxYomiganaLength: 0,
 		regex:             nil,
+		debug:             false,
 	}
+}
+
+// SetDebug sets the debug flag for the plugin
+func (p *IgnoreYomiganaPlugin) SetDebug(debug bool) {
+	p.debug = debug
 }
 
 // GetName returns the plugin name for identification
@@ -131,12 +139,28 @@ func (p *IgnoreYomiganaPlugin) SetUp(settings map[string]any, resourceDir string
 // makeRegex creates the regex pattern for matching kanji + yomigana pattern
 // This matches Rust's make_regex method exactly
 func (p *IgnoreYomiganaPlugin) makeRegex() (*regexp.Regexp, error) {
+	// Validate character category is available (matching Rust strict requirements)
+	if p.characterCategory == nil {
+		return nil, fmt.Errorf("character category data is required for regex pattern creation (matching Rust behavior)")
+	}
+
 	// Build the pattern: {kanji}({leftBracket}{reading}{1,maxLength}{rightBracket})
+	kanjiPattern := p.kanjiPattern()
+	readingPattern := p.readingPattern()
+
+	// Validate that patterns are not empty (character data was found)
+	if kanjiPattern == "[]" {
+		return nil, fmt.Errorf("no kanji character ranges found in character category data")
+	}
+	if readingPattern == "[]" {
+		return nil, fmt.Errorf("no hiragana/katakana character ranges found in character category data")
+	}
+
 	pattern := fmt.Sprintf(
 		"%s(%s%s{1,%d}%s)",
-		p.kanjiPattern(),
+		kanjiPattern,
 		p.anyOfPattern(p.leftBracketSet),
-		p.readingPattern(),
+		readingPattern,
 		p.maxYomiganaLength,
 		p.anyOfPattern(p.rightBracketSet),
 	)
@@ -167,23 +191,22 @@ func (p *IgnoreYomiganaPlugin) appendClass(categoryType dic.CategoryType) string
 	var builder strings.Builder
 	builder.WriteString("[")
 
-	// Get character ranges from character category (matching Rust implementation)
+	// Get character ranges from character category (matching Rust implementation exactly)
+	// Note: Rust version requires character category to be available, no fallback
 	if p.characterCategory != nil {
 		p.appendRangesForCategory(&builder, categoryType)
-	} else {
-		// Fallback to predefined ranges if character category is not available
-		p.appendPredefinedRanges(&builder, categoryType)
 	}
+	// Note: If character category is not available, empty character class will be created
+	// This matches Rust behavior which depends entirely on char.def data
 
 	builder.WriteString("]")
 	return builder.String()
 }
 
 // appendRangesForCategory dynamically builds Unicode ranges from character category
-// This matches Rust's character_category.iter() logic
+// This matches Rust's character_category.iter() logic exactly
 func (p *IgnoreYomiganaPlugin) appendRangesForCategory(builder *strings.Builder, categoryType dic.CategoryType) {
 	var currentRange *UnicodeRange
-	hasAnyRange := false
 
 	// Iterate through character category ranges (matching Rust implementation)
 	for _, entry := range p.characterCategory.GetRanges() {
@@ -199,7 +222,6 @@ func (p *IgnoreYomiganaPlugin) appendRangesForCategory(builder *strings.Builder,
 			// Output previous range
 			if currentRange != nil {
 				p.appendUnicodeRange(builder, *currentRange)
-				hasAnyRange = true
 			}
 			currentRange = newRange
 		}
@@ -208,38 +230,10 @@ func (p *IgnoreYomiganaPlugin) appendRangesForCategory(builder *strings.Builder,
 	// Output final range
 	if currentRange != nil {
 		p.appendUnicodeRange(builder, *currentRange)
-		hasAnyRange = true
 	}
 
-	// If no ranges found from character category, fallback to predefined ranges
-	if !hasAnyRange {
-		p.appendPredefinedRanges(builder, categoryType)
-	}
-}
-
-// appendPredefinedRanges provides fallback ranges when character category is unavailable
-func (p *IgnoreYomiganaPlugin) appendPredefinedRanges(builder *strings.Builder, categoryType dic.CategoryType) {
-	switch categoryType {
-	case dic.CategoryKanji:
-		// Standard CJK ranges using direct character literals
-		builder.WriteString("一-龯") // CJK Unified Ideographs main range
-		builder.WriteString("豈-鶴") // CJK Compatibility Ideographs
-	case dic.CategoryHiragana:
-		// Hiragana character range
-		builder.WriteString("ぁ-ゟ")
-	case dic.CategoryKatakana:
-		// Katakana character ranges
-		builder.WriteString("ァ-ヿ")   // Katakana
-		builder.WriteString("ㇰ-ㇿ") // Katakana Phonetic Extensions
-	case dic.CategoryHiragana | dic.CategoryKatakana:
-		// Combined hiragana and katakana ranges
-		builder.WriteString("ぁ-ゟ")   // Hiragana
-		builder.WriteString("ァ-ヿ")   // Katakana
-		builder.WriteString("ㇰ-ㇿ") // Katakana Phonetic Extensions
-	default:
-		// Fallback to broader CJK range
-		builder.WriteString("一-龯ぁ-ゟァ-ヿ")
-	}
+	// Note: Removed fallback to predefined ranges to match Rust implementation exactly
+	// If no ranges are found, the character class will be empty, matching Rust behavior
 }
 
 // appendUnicodeRange appends a Unicode range in Go regexp format
@@ -288,6 +282,12 @@ func (p *IgnoreYomiganaPlugin) anyOfPattern(charSet map[rune]bool) string {
 // Rewrite implements InputTextPlugin interface
 // This matches Rust's rewrite_impl method exactly
 func (p *IgnoreYomiganaPlugin) Rewrite(buffer *input.InputBuffer) error {
+	// Get current state of buffer (which includes changes from previous plugins)
+	current := buffer.Modified()
+	if p.debug {
+		fmt.Printf("[DEBUG] IgnoreYomiganaPlugin.Rewrite: Called with input '%s'\n", current)
+	}
+
 	if buffer.IsReadOnly() {
 		return fmt.Errorf("buffer is read-only")
 	}
@@ -296,11 +296,10 @@ func (p *IgnoreYomiganaPlugin) Rewrite(buffer *input.InputBuffer) error {
 		return fmt.Errorf("plugin not properly initialized: regex is nil")
 	}
 
-	original := buffer.Original()
-	modified := original
+	modified := current
 
 	// Find all matches and remove yomigana parts (matching Rust: for m in regex.captures_iter(data))
-	matches := p.regex.FindAllStringSubmatchIndex(original, -1)
+	matches := p.regex.FindAllStringSubmatchIndex(current, -1)
 
 	// Process matches in reverse order to maintain correct indices
 	for i := len(matches) - 1; i >= 0; i-- {
@@ -315,8 +314,15 @@ func (p *IgnoreYomiganaPlugin) Rewrite(buffer *input.InputBuffer) error {
 	}
 
 	// Apply modification if any changes were made
-	if modified != original {
+	if modified != current {
+		if p.debug {
+			fmt.Printf("[DEBUG] IgnoreYomiganaPlugin.Rewrite: Text changed from '%s' to '%s'\n", current, modified)
+		}
 		return buffer.SetModified(modified)
+	} else {
+		if p.debug {
+			fmt.Printf("[DEBUG] IgnoreYomiganaPlugin.Rewrite: No text changes applied\n")
+		}
 	}
 
 	return nil
@@ -361,4 +367,32 @@ func (p *IgnoreYomiganaPlugin) isHiraganaOrKatakana(r rune) bool {
 	return (r >= 0x3040 && r <= 0x309F) || // Hiragana
 		(r >= 0x30A0 && r <= 0x30FF) || // Katakana
 		(r >= 0x31F0 && r <= 0x31FF) // Katakana Phonetic Extensions
+}
+
+// CreateInputTextPlugin creates an IgnoreYomiganaPlugin instance
+func (p *IgnoreYomiganaPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.InputTextPlugin, error) {
+	yomiganaPlugin := NewIgnoreYomiganaPlugin()
+
+	// Set up the plugin with configuration
+	err := yomiganaPlugin.SetUp(settings, resourceDir, grammar)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set up IgnoreYomigana plugin: %w", err)
+	}
+
+	return yomiganaPlugin, nil
+}
+
+// CreateOOVProvider creates an OOV provider plugin (not supported by IgnoreYomigana plugin)
+func (p *IgnoreYomiganaPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.OOVProviderPlugin, error) {
+	return nil, fmt.Errorf("IgnoreYomigana plugin does not support OOV provider plugins")
+}
+
+// CreatePathRewriter creates a path rewrite plugin (not supported by IgnoreYomigana plugin)
+func (p *IgnoreYomiganaPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.PathRewritePlugin, error) {
+	return nil, fmt.Errorf("IgnoreYomigana plugin does not support path rewrite plugins")
+}
+
+// GetSupportedTypes returns the plugin types this factory supports
+func (p *IgnoreYomiganaPlugin) GetSupportedTypes() []plugin.PluginType {
+	return []plugin.PluginType{plugin.PluginTypeInputText}
 }

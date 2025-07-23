@@ -1,19 +1,3 @@
-/*
- *  Copyright (c) 2021-2024 Works Applications Co., Ltd.
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 package connect_cost
 
 import (
@@ -41,10 +25,11 @@ type EditConnectionCostPlugin interface {
 // InhibitConnectionPlugin is a edit connection cost plugin for inhibiting the connections.
 //
 // Example setting:
-// {
-//     "class": "InhibitConnectionPlugin",
-//     "inhibitPair": [[0, 233], [435, 332]]
-// }
+//
+//	{
+//	    "class": "InhibitConnectionPlugin",
+//	    "inhibitPair": [[0, 233], [435, 332]]
+//	}
 type InhibitConnectionPlugin struct {
 	// At each pair, the first one is right_id of the left node
 	// and the second one is left_id of right node in a connection
@@ -78,7 +63,7 @@ func (p *InhibitConnectionPlugin) SetUp(settings map[string]any, resourceDir str
 		return fmt.Errorf("failed to parse plugin settings: %w", err)
 	}
 
-	// Store inhibit pairs exactly as in Rust version
+	// Stores inhibit pairs exactly as in a Rust version
 	p.inhibitPairs = pluginSettings.InhibitPair
 
 	return nil

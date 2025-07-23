@@ -1,19 +1,3 @@
-/*
- *  Copyright (c) 2021-2024 Works Applications Co., Ltd.
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 package connect_cost
 
 import (
@@ -25,7 +9,7 @@ import (
 func TestInhibitConnectionPlugin_Edit(t *testing.T) {
 	left := int16(0)
 	right := int16(0)
-	
+
 	// Create mock grammar with 1x1 connection matrix (matching Rust test)
 	bytes := buildMockBytes()
 	grammar, err := dic.NewGrammar(bytes, 0)
@@ -33,7 +17,7 @@ func TestInhibitConnectionPlugin_Edit(t *testing.T) {
 		t.Fatalf("Failed to create grammar: %v", err)
 	}
 
-	// Create plugin with test pair
+	// Create plugin with a test pair
 	plugin := &InhibitConnectionPlugin{
 		inhibitPairs: [][2]int16{{left, right}},
 	}
@@ -50,7 +34,7 @@ func TestInhibitConnectionPlugin_Edit(t *testing.T) {
 
 func TestInhibitConnectionPlugin_SetUp(t *testing.T) {
 	plugin := NewInhibitConnectionPlugin()
-	
+
 	// Create test settings matching Rust configuration format
 	settings := map[string]any{
 		"inhibitPair": [][]int{
@@ -80,7 +64,7 @@ func TestInhibitConnectionPlugin_SetUp(t *testing.T) {
 
 	for i, pair := range plugin.inhibitPairs {
 		if pair[0] != expected[i][0] || pair[1] != expected[i][1] {
-			t.Errorf("Pair %d: expected [%d, %d], got [%d, %d]", 
+			t.Errorf("Pair %d: expected [%d, %d], got [%d, %d]",
 				i, expected[i][0], expected[i][1], pair[0], pair[1])
 		}
 	}
@@ -98,7 +82,7 @@ func TestInhibitConnectionPlugin_GetName(t *testing.T) {
 func TestInhibitConnection(t *testing.T) {
 	left := int16(0)
 	right := int16(0)
-	
+
 	// Create mock grammar
 	bytes := buildMockBytes()
 	grammar, err := dic.NewGrammar(bytes, 0)
@@ -120,19 +104,19 @@ func TestInhibitConnection(t *testing.T) {
 // Matches Rust test: fn build_mock_bytes() -> Vec<u8>
 func buildMockBytes() []byte {
 	var buf []byte
-	
+
 	// 0 - pos size (0 POS entries)
 	buf = append(buf, 0, 0) // u16 little-endian
-	
+
 	// left_id_size = 1
 	buf = append(buf, 1, 0) // u16 little-endian
-	
-	// right_id_size = 1  
+
+	// right_id_size = 1
 	buf = append(buf, 1, 0) // u16 little-endian
-	
+
 	// 1x1 connection matrix with 0 cost
 	buf = append(buf, 0, 0) // i16 little-endian
-	
+
 	return buf
 }
 

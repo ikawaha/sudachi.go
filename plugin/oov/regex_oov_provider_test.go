@@ -1,19 +1,3 @@
-/*
- *  Copyright (c) 2022-2024 Works Applications Co., Ltd.
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 package oov
 
 import (
@@ -30,13 +14,13 @@ import (
 // Matches Rust test: #[test] fn works()
 func TestRegexOovProvider_Works(t *testing.T) {
 	plugin := createTestPlugin(t, "test", nil)
-	
+
 	// Test case 1: "xtest" at offset 0 - should not match
 	buffer1 := createTestBuffer(t, "xtest")
 	lattice1 := lattice.New()
 	lattice1.Reset(4)
 	createdWords1 := types.EmptyCreatedWords()
-	
+
 	result1, err := plugin.ProvideOOV(0, buffer1, lattice1, createdWords1)
 	if err != nil {
 		t.Fatalf("ProvideOOV failed: %v", err)
@@ -44,7 +28,7 @@ func TestRegexOovProvider_Works(t *testing.T) {
 	if result1.HasWord(4) != types.HasWordNo {
 		t.Error("Expected no OOV at position 0 in 'xtest'")
 	}
-	
+
 	// Test case 2: "xtest" at offset 1 - should not match
 	result2, err := plugin.ProvideOOV(1, buffer1, lattice1, createdWords1)
 	if err != nil {
@@ -53,13 +37,13 @@ func TestRegexOovProvider_Works(t *testing.T) {
 	if result2.HasWord(4) != types.HasWordNo {
 		t.Error("Expected no OOV at position 1 in 'xtest'")
 	}
-	
+
 	// Test case 3: "testf" at offset 0 - should match
 	buffer3 := createTestBuffer(t, "testf")
 	lattice3 := lattice.New()
 	lattice3.Reset(5)
 	createdWords3 := types.EmptyCreatedWords()
-	
+
 	result3, err := plugin.ProvideOOV(0, buffer3, lattice3, createdWords3)
 	if err != nil {
 		t.Fatalf("ProvideOOV failed: %v", err)
@@ -73,7 +57,7 @@ func TestRegexOovProvider_Works(t *testing.T) {
 // Matches Rust test: #[test] fn works_regex()
 func TestRegexOovProvider_WorksRegex(t *testing.T) {
 	plugin := createTestPlugin(t, "[-0-9a-zA-Z]{4,}", nil)
-	
+
 	// Test input: "おらおら1512XF-2テスト"
 	// Expected match: "1512XF-2" at char positions 4-12
 	testText := "おらおら1512XF-2テスト"
@@ -81,27 +65,25 @@ func TestRegexOovProvider_WorksRegex(t *testing.T) {
 	lattice := lattice.New()
 	lattice.Reset(len([]rune(testText)))
 	createdWords := types.EmptyCreatedWords()
-	
-	
+
 	// Test at position 4 (start of "1512XF-2")
 	result, err := plugin.ProvideOOV(4, buffer, lattice, createdWords)
 	if err != nil {
 		t.Fatalf("ProvideOOV failed: %v", err)
 	}
-	
-	
+
 	// Verify OOV was created
 	if result.HasWord(8) == types.HasWordNo { // "1512XF-2" is 8 characters
 		t.Error("Expected OOV match for '1512XF-2'")
 	}
-	
+
 	// Test with existing word at same position (should not create OOV)
 	createdWordsWithExisting := types.EmptyCreatedWords().AddWord(8)
 	result2, err := plugin.ProvideOOV(4, buffer, lattice, createdWordsWithExisting)
 	if err != nil {
 		t.Fatalf("ProvideOOV failed: %v", err)
 	}
-	
+
 	// Should not add another word of same length (result should be unchanged)
 	if result2.HasWord(8) == types.HasWordNo {
 		t.Error("Expected existing word to remain")
@@ -115,11 +97,11 @@ func TestRegexOovProvider_Boundaries(t *testing.T) {
 	relaxedPlugin := createTestPlugin(t, "[-0-9a-zA-Z]{4,}", map[string]any{
 		"boundaries": "relaxed",
 	})
-	
+
 	testText := "Q1232WERTY"
 	buffer := createTestBuffer(t, testText)
 	createdWords := types.EmptyCreatedWords()
-	
+
 	// With relaxed boundaries, should match at positions 0, 1, 2
 	for pos := 0; pos <= 2; pos++ {
 		lattice := lattice.New()
@@ -128,17 +110,17 @@ func TestRegexOovProvider_Boundaries(t *testing.T) {
 		if err != nil {
 			t.Fatalf("ProvideOOV failed at position %d: %v", pos, err)
 		}
-		
+
 		// For relaxed mode, we expect OOV creation
 		expectedLength := len(testText) - pos // Length from current position to end
 		if result.HasWord(expectedLength) == types.HasWordNo {
 			t.Errorf("Expected OOV at position %d with relaxed boundaries", pos)
 		}
 	}
-	
+
 	// Test strict boundaries (default)
 	strictPlugin := createTestPlugin(t, "[-0-9a-zA-Z]{4,}", nil)
-	
+
 	// With strict boundaries, boundary conditions apply
 	lattice := lattice.New()
 	lattice.Reset(len([]rune(testText)))
@@ -146,7 +128,7 @@ func TestRegexOovProvider_Boundaries(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ProvideOOV failed: %v", err)
 	}
-	
+
 	// Note: Boundary logic testing requires full character category integration
 }
 
@@ -154,7 +136,7 @@ func TestRegexOovProvider_Boundaries(t *testing.T) {
 func TestRegexOovProvider_SetUp(t *testing.T) {
 	plugin := NewRegexOovProvider()
 	grammar := createTestGrammar(t)
-	
+
 	settings := map[string]any{
 		"leftId":     int64(10),
 		"rightId":    int64(20),
@@ -165,12 +147,12 @@ func TestRegexOovProvider_SetUp(t *testing.T) {
 		"debug":      true,
 		"boundaries": "relaxed",
 	}
-	
+
 	err := plugin.SetUp(settings, "", grammar)
 	if err != nil {
 		t.Fatalf("SetUp failed: %v", err)
 	}
-	
+
 	// Verify configuration was applied
 	if plugin.leftId != 10 {
 		t.Errorf("Expected leftId 10, got %d", plugin.leftId)
@@ -212,7 +194,7 @@ func TestRegexOovProvider_GetName(t *testing.T) {
 func createTestPlugin(t *testing.T, regex string, extraSettings map[string]any) *RegexOovProvider {
 	plugin := NewRegexOovProvider()
 	grammar := createTestGrammar(t)
-	
+
 	settings := map[string]any{
 		"leftId":  int64(0),
 		"rightId": int64(0),
@@ -220,17 +202,17 @@ func createTestPlugin(t *testing.T, regex string, extraSettings map[string]any) 
 		"regex":   regex,
 		"pos":     []string{"a", "b", "c", "d", "e", "f"},
 	}
-	
+
 	// Add extra settings
 	for k, v := range extraSettings {
 		settings[k] = v
 	}
-	
+
 	err := plugin.SetUp(settings, "", grammar)
 	if err != nil {
 		t.Fatalf("Failed to set up plugin: %v", err)
 	}
-	
+
 	return plugin
 }
 
@@ -238,17 +220,17 @@ func createTestPlugin(t *testing.T, regex string, extraSettings map[string]any) 
 func createTestBuffer(t *testing.T, text string) *input.InputBuffer {
 	grammar := createTestGrammar(t)
 	buffer := input.NewInputBuffer()
-	
+
 	err := buffer.StartBuild(text)
 	if err != nil {
 		t.Fatalf("Failed to start buffer build: %v", err)
 	}
-	
+
 	err = buffer.Build(grammar)
 	if err != nil {
 		t.Fatalf("Failed to build buffer: %v", err)
 	}
-	
+
 	return buffer
 }
 
@@ -257,16 +239,16 @@ func createTestBuffer(t *testing.T, text string) *input.InputBuffer {
 func createTestGrammar(t *testing.T) *dic.Grammar {
 	// Exact port of Rust's build_mock_bytes() from sudachi.rs/sudachi/src/util/testing.rs:32-55
 	buf := buildMockBytes()
-	
+
 	grammar, err := dic.NewGrammar(buf, 0)
 	if err != nil {
 		t.Fatalf("Failed to create test grammar: %v", err)
 	}
-	
+
 	// Exact port of Rust's build_mock_grammar: grammar.set_character_category(char_cats())
 	charCategory := createTestCharacterCategory(t)
 	grammar.CharacterCategory = charCategory
-	
+
 	return grammar
 }
 
@@ -274,11 +256,11 @@ func createTestGrammar(t *testing.T) *dic.Grammar {
 // From sudachi.rs/sudachi/src/util/testing.rs:32-55
 func buildMockBytes() []byte {
 	var buf []byte
-	
+
 	// encode pos for oov (exactly matching Rust line 35)
 	// buf.extend(&1_i16.to_le_bytes());
 	buf = append(buf, 1, 0) // 1 as i16 little-endian
-	
+
 	// let pos = vec!["補助記号", "一般", "*", "*", "*", "*"]; (exactly matching Rust line 36)
 	pos := []string{"補助記号", "一般", "*", "*", "*", "*"}
 	for _, s := range pos {
@@ -290,11 +272,11 @@ func buildMockBytes() []byte {
 			buf = append(buf, byte(c), byte(c>>8))
 		}
 	}
-	
+
 	// set 10 for left and right id sizes (exactly matching Rust lines 44-45)
-	buf = append(buf, 10, 0) // 10 as i16 little-endian  
 	buf = append(buf, 10, 0) // 10 as i16 little-endian
-	
+	buf = append(buf, 10, 0) // 10 as i16 little-endian
+
 	// Connection matrix 10x10 (exactly matching Rust lines 46-51)
 	for i := 0; i < 10; i++ {
 		for j := 0; j < 10; j++ {
@@ -302,7 +284,7 @@ func buildMockBytes() []byte {
 			buf = append(buf, byte(val), byte(val>>8)) // val as i16 little-endian
 		}
 	}
-	
+
 	return buf
 }
 
@@ -334,13 +316,13 @@ KANJINUMERIC 0 1 2
 0x3041..0x309F KANJI
 0x30A1..0x30FF KANJINUMERIC
 `
-	
+
 	charCategory := dic.NewCharacterCategory()
 	err := charCategory.LoadFromReader(strings.NewReader(charDef))
 	if err != nil {
 		t.Fatalf("Failed to create character category: %v", err)
 	}
-	
+
 	return charCategory
 }
 
@@ -353,16 +335,16 @@ func TestRustCompatibility(t *testing.T) {
 	if BoundaryModeRelaxed.String() != "relaxed" {
 		t.Errorf("Expected relaxed boundary mode string 'relaxed', got %q", BoundaryModeRelaxed.String())
 	}
-	
+
 	// Test default max length
 	if defaultMaxLength() != 32 {
 		t.Errorf("Expected default max length 32, got %d", defaultMaxLength())
 	}
-	
+
 	// Test regex prefix handling
 	plugin := NewRegexOovProvider()
 	grammar := createTestGrammar(t)
-	
+
 	settings := map[string]any{
 		"leftId":  int64(0),
 		"rightId": int64(0),
@@ -370,12 +352,12 @@ func TestRustCompatibility(t *testing.T) {
 		"regex":   "test", // No ^ prefix
 		"pos":     []string{"a", "b", "c", "d", "e", "f"},
 	}
-	
+
 	err := plugin.SetUp(settings, "", grammar)
 	if err != nil {
 		t.Fatalf("SetUp failed: %v", err)
 	}
-	
+
 	// Should automatically add ^ prefix
 	if plugin.regex.String() != "^test" {
 		t.Errorf("Expected regex '^test', got %q", plugin.regex.String())

@@ -1,19 +1,3 @@
-/*
- *  Copyright (c) 2022-2024 Works Applications Co., Ltd.
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 package oov
 
 import (
@@ -86,7 +70,7 @@ func NewRegexOovProvider() *RegexOovProvider {
 type RegexProviderConfig struct {
 	POS        []string `json:"pos"`        // #[serde(alias = "oovPOS")]
 	LeftId     int64    `json:"leftId"`     // leftId
-	RightId    int64    `json:"rightId"`    // rightId  
+	RightId    int64    `json:"rightId"`    // rightId
 	Cost       int64    `json:"cost"`       // cost
 	Regex      string   `json:"regex"`      // regex
 	MaxLength  int      `json:"maxLength"`  // #[serde(default = "default_max_length")]
@@ -145,7 +129,7 @@ func (p *RegexOovProvider) SetUp(settings map[string]any, resourceDir string, gr
 	if len(config.POS) != dic.POSDepth {
 		return fmt.Errorf("invalid POS: expected %d components, got %d", dic.POSDepth, len(config.POS))
 	}
-	
+
 	posId, err := grammar.RegisterPOS(config.POS)
 	if err != nil {
 		return fmt.Errorf("failed to register POS: %w", err)
@@ -178,12 +162,12 @@ func (p *RegexOovProvider) ProvideOOV(charPos int, buffer *input.InputBuffer, la
 		if err != nil {
 			return createdWords, nil // Silently skip invalid positions
 		}
-		
+
 		prevCatContinuity, err := buffer.GetCategoryContinuity(charPos - 1)
 		if err != nil {
 			return createdWords, nil // Silently skip invalid positions
 		}
-		
+
 		// Check if there's no discontinuity (matching Rust: if this_cat + 1 == prev_cat)
 		if thisCatContinuity+1 == prevCatContinuity {
 			// No discontinuity, skip this position
@@ -214,7 +198,7 @@ func (p *RegexOovProvider) ProvideOOV(charPos int, buffer *input.InputBuffer, la
 	matchIndex := p.regex.FindStringIndex(textSlice)
 	if matchIndex == nil || matchIndex[0] != 0 {
 		if p.debug {
-			return createdWords, fmt.Errorf("regex %q matched non-starting text in input %q at position %d", 
+			return createdWords, fmt.Errorf("regex %q matched non-starting text in input %q at position %d",
 				p.regex.String(), textSlice, matchIndex[0])
 		}
 		return createdWords, nil
@@ -241,7 +225,7 @@ func (p *RegexOovProvider) ProvideOOV(charPos int, buffer *input.InputBuffer, la
 
 	// Create OOV node (matching Rust Node::new)
 	wordId := dic.OOV(uint32(p.pos))
-	
+
 	// Note: In actual implementation, we would add the node to the lattice
 	// For now, we'll just track that we created a word of this length
 	// This matches the Rust behavior where the node would be added to result Vec<Node>

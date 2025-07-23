@@ -8,6 +8,7 @@ import (
 	"github.com/ikawaha/sudachi.go/dic"
 	"github.com/ikawaha/sudachi.go/input"
 	"github.com/ikawaha/sudachi.go/lattice"
+	"github.com/ikawaha/sudachi.go/plugin"
 )
 
 // StringNumber represents a number as a string with scale and decimal point handling (Rust-compatible)
@@ -21,7 +22,7 @@ type StringNumber struct {
 // NewStringNumber creates a new StringNumber initialized to empty (matching Rust)
 func NewStringNumber() *StringNumber {
 	return &StringNumber{
-		significand: "", // Empty like Rust version // ikawaha: rust版ではどうなっているか？
+		significand: "", // Empty like Rust version
 		scale:       0,
 		point:       -1,
 		isAllZero:   true,
@@ -702,4 +703,32 @@ func (p *JoinNumericPlugin) concatNodes(path []*lattice.NodeResult, begin, end i
 	result = append(result, path[end:]...)
 
 	return result, nil
+}
+
+// CreateInputTextPlugin creates an input text plugin (not supported by JoinNumeric plugin)
+func (p *JoinNumericPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.InputTextPlugin, error) {
+	return nil, fmt.Errorf("JoinNumeric plugin does not support input text plugins")
+}
+
+// CreateOOVProvider creates an OOV provider plugin (not supported by JoinNumeric plugin)
+func (p *JoinNumericPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.OOVProviderPlugin, error) {
+	return nil, fmt.Errorf("JoinNumeric plugin does not support OOV provider plugins")
+}
+
+// CreatePathRewriter creates a JoinNumeric path rewrite plugin instance
+func (p *JoinNumericPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.PathRewritePlugin, error) {
+	joinNumericPlugin := NewJoinNumericPlugin()
+
+	// Set up the plugin with configuration
+	err := joinNumericPlugin.SetUp(settings, resourceDir, grammar)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set up JoinNumeric plugin: %w", err)
+	}
+
+	return joinNumericPlugin, nil
+}
+
+// GetSupportedTypes returns the plugin types this factory supports
+func (p *JoinNumericPlugin) GetSupportedTypes() []plugin.PluginType {
+	return []plugin.PluginType{plugin.PluginTypePathRewrite}
 }

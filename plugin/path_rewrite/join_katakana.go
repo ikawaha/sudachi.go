@@ -1,12 +1,14 @@
 package path_rewrite
 
 import (
+	"fmt"
 	"strings"
 	"unicode"
 
 	"github.com/ikawaha/sudachi.go/dic"
 	"github.com/ikawaha/sudachi.go/input"
 	"github.com/ikawaha/sudachi.go/lattice"
+	"github.com/ikawaha/sudachi.go/plugin"
 )
 
 // JoinKatakanaOovPlugin concatenates consecutive katakana OOV nodes
@@ -202,4 +204,32 @@ func (p *JoinKatakanaOovPlugin) concatenateNodes(nodes []*lattice.NodeResult) (*
 	)
 
 	return concatenated, nil
+}
+
+// CreateInputTextPlugin creates an input text plugin (not supported by JoinKatakanaOov plugin)
+func (p *JoinKatakanaOovPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.InputTextPlugin, error) {
+	return nil, fmt.Errorf("JoinKatakanaOov plugin does not support input text plugins")
+}
+
+// CreateOOVProvider creates an OOV provider plugin (not supported by JoinKatakanaOov plugin)
+func (p *JoinKatakanaOovPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.OOVProviderPlugin, error) {
+	return nil, fmt.Errorf("JoinKatakanaOov plugin does not support OOV provider plugins")
+}
+
+// CreatePathRewriter creates a JoinKatakanaOov path rewrite plugin instance
+func (p *JoinKatakanaOovPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.PathRewritePlugin, error) {
+	joinKatakanaPlugin := NewJoinKatakanaOovPlugin()
+
+	// Set up the plugin with configuration
+	err := joinKatakanaPlugin.SetUp(settings, resourceDir, grammar)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set up JoinKatakanaOov plugin: %w", err)
+	}
+
+	return joinKatakanaPlugin, nil
+}
+
+// GetSupportedTypes returns the plugin types this factory supports
+func (p *JoinKatakanaOovPlugin) GetSupportedTypes() []plugin.PluginType {
+	return []plugin.PluginType{plugin.PluginTypePathRewrite}
 }

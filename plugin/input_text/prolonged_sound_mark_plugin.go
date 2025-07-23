@@ -7,6 +7,7 @@ import (
 
 	"github.com/ikawaha/sudachi.go/dic"
 	"github.com/ikawaha/sudachi.go/input"
+	"github.com/ikawaha/sudachi.go/plugin"
 )
 
 // ProlongedSoundMarkPlugin replaces consecutive prolonged sound marks with a single symbol
@@ -15,6 +16,7 @@ type ProlongedSoundMarkPlugin struct {
 	psmSet        map[rune]bool  // Set of prolonged sound mark characters
 	replaceSymbol string         // Symbol to replace consecutive marks with
 	regex         *regexp.Regexp // Compiled regex for matching consecutive marks
+	debug         bool           // Debug flag for conditional output
 }
 
 // PluginSettings represents configuration settings for ProlongedSoundMarkPlugin
@@ -31,7 +33,13 @@ func NewProlongedSoundMarkPlugin() *ProlongedSoundMarkPlugin {
 		psmSet:        map[rune]bool{},
 		replaceSymbol: "ー", // Default replacement symbol
 		regex:         nil, // Will be set during setup
+		debug:         false,
 	}
+}
+
+// SetDebug sets the debug flag for the plugin
+func (p *ProlongedSoundMarkPlugin) SetDebug(debug bool) {
+	p.debug = debug
 }
 
 // GetName returns the plugin name for identification
@@ -99,7 +107,7 @@ func (p *ProlongedSoundMarkPlugin) buildProlongedSoundRegex() (*regexp.Regexp, e
 		switch symbol {
 		case '-', '[', ']', '^', '\\':
 			// Escape special regex characters (matching Rust write!(pattern, "\\u{{{:X}}}", symbol as u32))
-			pattern.WriteString(fmt.Sprintf("\\u%04X", symbol))
+			pattern.WriteString(fmt.Sprintf("\\x{%X}", symbol))
 		default:
 			pattern.WriteRune(symbol)
 		}
@@ -118,6 +126,12 @@ func (p *ProlongedSoundMarkPlugin) buildProlongedSoundRegex() (*regexp.Regexp, e
 // Rewrite implements InputTextPlugin interface
 // This matches Rust's rewrite_impl method exactly
 func (p *ProlongedSoundMarkPlugin) Rewrite(buffer *input.InputBuffer) error {
+	// Get current state of buffer (which includes changes from previous plugins)
+	current := buffer.Modified()
+	if p.debug {
+		fmt.Printf("[DEBUG] ProlongedSoundMarkPlugin.Rewrite: Called with input '%s'\n", current)
+	}
+
 	if buffer.IsReadOnly() {
 		return fmt.Errorf("buffer is read-only")
 	}
@@ -126,11 +140,10 @@ func (p *ProlongedSoundMarkPlugin) Rewrite(buffer *input.InputBuffer) error {
 		return fmt.Errorf("plugin not properly initialized: regex is nil")
 	}
 
-	original := buffer.Original()
-	modified := original
+	modified := current
 
 	// Find all matches and replace them (matching Rust: for m in re.find_iter(data))
-	matches := p.regex.FindAllStringIndex(original, -1)
+	matches := p.regex.FindAllStringIndex(current, -1)
 
 	// Process matches in reverse order to maintain correct indices
 	for i := len(matches) - 1; i >= 0; i-- {
@@ -143,8 +156,15 @@ func (p *ProlongedSoundMarkPlugin) Rewrite(buffer *input.InputBuffer) error {
 	}
 
 	// Apply modification if any changes were made
-	if modified != original {
+	if modified != current {
+		if p.debug {
+			fmt.Printf("[DEBUG] ProlongedSoundMarkPlugin.Rewrite: Text changed from '%s' to '%s'\n", current, modified)
+		}
 		return buffer.SetModified(modified)
+	} else {
+		if p.debug {
+			fmt.Printf("[DEBUG] ProlongedSoundMarkPlugin.Rewrite: No text changes applied\n")
+		}
 	}
 
 	return nil
@@ -165,4 +185,32 @@ func (p *ProlongedSoundMarkPlugin) RewriteImpl(input string) (string, bool) {
 	changed := result != input
 
 	return result, changed
+}
+
+// CreateInputTextPlugin creates a ProlongedSoundMarkPlugin instance
+func (p *ProlongedSoundMarkPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.InputTextPlugin, error) {
+	prolongedPlugin := NewProlongedSoundMarkPlugin()
+
+	// Set up the plugin with configuration
+	err := prolongedPlugin.SetUp(settings, resourceDir, grammar)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set up ProlongedSoundMark plugin: %w", err)
+	}
+
+	return prolongedPlugin, nil
+}
+
+// CreateOOVProvider creates an OOV provider plugin (not supported by ProlongedSoundMark plugin)
+func (p *ProlongedSoundMarkPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.OOVProviderPlugin, error) {
+	return nil, fmt.Errorf("ProlongedSoundMark plugin does not support OOV provider plugins")
+}
+
+// CreatePathRewriter creates a path rewrite plugin (not supported by ProlongedSoundMark plugin)
+func (p *ProlongedSoundMarkPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.PathRewritePlugin, error) {
+	return nil, fmt.Errorf("ProlongedSoundMark plugin does not support path rewrite plugins")
+}
+
+// GetSupportedTypes returns the plugin types this factory supports
+func (p *ProlongedSoundMarkPlugin) GetSupportedTypes() []plugin.PluginType {
+	return []plugin.PluginType{plugin.PluginTypeInputText}
 }

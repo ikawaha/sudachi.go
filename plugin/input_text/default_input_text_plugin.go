@@ -7,6 +7,7 @@ import (
 
 	"github.com/ikawaha/sudachi.go/dic"
 	"github.com/ikawaha/sudachi.go/input"
+	"github.com/ikawaha/sudachi.go/plugin"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -23,6 +24,8 @@ type DefaultInputTextPlugin struct {
 	stringReplacer *input.StringReplacer
 	// Replacement values (corresponding to keys in replaceCharMap)
 	replacements []string
+	// Debug flag for conditional output
+	debug bool
 }
 
 // NewDefaultInputTextPlugin creates a new DefaultInputTextPlugin
@@ -32,7 +35,13 @@ func NewDefaultInputTextPlugin() *DefaultInputTextPlugin {
 		keyLengths:         map[rune]int{},
 		replaceCharMap:     map[string]string{},
 		replacements:       []string{},
+		debug:              false,
 	}
+}
+
+// SetDebug sets the debug flag for the plugin
+func (p *DefaultInputTextPlugin) SetDebug(debug bool) {
+	p.debug = debug
 }
 
 // SetUp initializes the plugin with configuration (implements plugin.InputTextPlugin)
@@ -149,101 +158,87 @@ func (p *DefaultInputTextPlugin) replaceFast(input string) (string, bool) {
 	return result, changed
 }
 
-// replaceSlow implements slow path normalization (matches Rust replace_slow)
-// Used when NFKC or case folding is needed - processes character by character
+// replaceSlow implements slow path normalization (faithful port of Rust replace_slow)
+// Used when NFKC or case folding is needed - processes character by character like Rust version
 func (p *DefaultInputTextPlugin) replaceSlow(input string) (string, bool) {
-	result := input
+	var builder strings.Builder
+	builder.Grow(len(input))
 	changed := false
+	runes := []rune(input)
 
-	// First apply string replacements (same as fast path)
-	if p.stringReplacer != nil && p.stringReplacer.HasReplacements() {
-		newResult := p.stringReplacer.Replace(result)
-		if newResult != result {
-			result = newResult
-			changed = true
-		}
-	}
+	for i := 0; i < len(runes); {
+		ch := runes[i]
 
-	// Apply case folding while preserving ignore normalize characters
-	newResult := p.applySelectiveCaseFolding(result)
-	if newResult != result {
-		result = newResult
-		changed = true
-	}
-
-	// Apply selective NFKC normalization
-	newResult = p.applySelectiveNFKC(result)
-	if newResult != result {
-		result = newResult
-		changed = true
-	}
-
-	return result, changed
-}
-
-// applySelectiveNFKC applies NFKC normalization while preserving ignored characters
-// This matches Rust's NFKC handling in replace_slow
-func (p *DefaultInputTextPlugin) applySelectiveNFKC(input string) string {
-	if len(p.ignoreNormalizeSet) == 0 {
-		// No characters to protect, use standard NFKC
-		return norm.NFKC.String(input)
-	}
-
-	// Process character by character to protect ignored characters
-	var builder strings.Builder
-	builder.Grow(len(input))
-
-	inputRunes := []rune(input)
-	i := 0
-
-	for i < len(inputRunes) {
-		r := inputRunes[i]
-
-		if p.shouldIgnore(r) {
-			// Protected character - write as-is
-			builder.WriteRune(r)
-			i++
-		} else {
-			// Find the next protected character or end of string
-			segmentStart := i
-			for i < len(inputRunes) && !p.shouldIgnore(inputRunes[i]) {
-				i++
+		// 1. Check for character replacement as defined by rewrite.def (equivalent to AhoCorasick)
+		// Look for multi-character replacements starting at current position
+		replaced := false
+		if maxLen, exists := p.keyLengths[ch]; exists {
+			// Check from longest possible match to single character
+			for length := maxLen; length >= 1 && i+length <= len(runes); length-- {
+				candidate := string(runes[i : i+length])
+				if replacement, found := p.replaceCharMap[candidate]; found {
+					builder.WriteString(replacement)
+					i += length
+					changed = true
+					replaced = true
+					break
+				}
 			}
+		}
 
-			// Normalize the segment between protected characters
-			segment := string(inputRunes[segmentStart:i])
-			normalized := norm.NFKC.String(segment)
+		if replaced {
+			continue
+		}
+
+		// 2. Handle normalization for individual character (matching Rust logic)
+		// Note: ASCII letters (A-Z, a-z) are not lowercased to match Rust CLI behavior
+		needLowercase := unicode.IsUpper(ch) && !isASCIILetter(ch)
+		needNFKC := !p.shouldIgnore(ch) && !norm.NFKC.IsNormalString(string(ch))
+
+		// Match Rust's (need_lowercase, need_nfkc) pattern matching
+		switch {
+		case !needLowercase && !needNFKC:
+			// (false, false) - no need to do anything
+			builder.WriteRune(ch)
+		case needLowercase && !needNFKC:
+			// (true, false) - only lowercasing
+			lowered := unicode.ToLower(ch)
+			builder.WriteRune(lowered)
+			if lowered != ch {
+				changed = true
+			}
+		case !needLowercase && needNFKC:
+			// (false, true) - only normalization
+			normalized := norm.NFKC.String(string(ch))
 			builder.WriteString(normalized)
+			if normalized != string(ch) {
+				changed = true
+			}
+		case needLowercase && needNFKC:
+			// (true, true) - both lowercasing and normalization
+			lowered := unicode.ToLower(ch)
+			normalized := norm.NFKC.String(string(lowered))
+			builder.WriteString(normalized)
+			if normalized != string(ch) {
+				changed = true
+			}
 		}
+
+		i++
 	}
 
-	return builder.String()
+	return builder.String(), changed
 }
 
-// applySelectiveCaseFolding applies case folding while preserving ignored characters
-// This matches Rust's to_lowercase handling in replace_slow
-func (p *DefaultInputTextPlugin) applySelectiveCaseFolding(input string) string {
-	if len(p.ignoreNormalizeSet) == 0 {
-		// No characters to protect, use standard case folding
-		return strings.ToLower(input)
-	}
-
-	// Process character by character to protect ignored characters
-	var builder strings.Builder
-	builder.Grow(len(input))
-
-	for _, r := range input {
-		if p.shouldIgnore(r) {
-			// Protected character - write as-is
-			builder.WriteRune(r)
-		} else {
-			// Apply case folding to unprotected character
-			builder.WriteRune(unicode.ToLower(r))
-		}
-	}
-
-	return builder.String()
+// isASCIILetter checks if a rune is an ASCII letter (A-Z or a-z)
+// ASCII letters are not lowercased to match Rust CLI behavior
+func isASCIILetter(r rune) bool {
+	return (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z')
 }
+
+// Note: applySelectiveNFKC and applySelectiveCaseFolding methods have been removed
+// as they are no longer needed. The new replaceSlow method handles normalization
+// character-by-character as per the Rust implementation.
 
 // GetName returns the plugin name for identification (implements plugin.InputTextPlugin)
 func (p *DefaultInputTextPlugin) GetName() string {
@@ -252,15 +247,27 @@ func (p *DefaultInputTextPlugin) GetName() string {
 
 // Rewrite implements InputTextPlugin interface
 func (p *DefaultInputTextPlugin) Rewrite(buffer *input.InputBuffer) error {
+	// Get current state of buffer (which includes changes from previous plugins)
+	current := buffer.Modified()
+	if p.debug {
+		fmt.Printf("[DEBUG] DefaultInputTextPlugin.Rewrite: Called with input '%s'\n", current)
+	}
+
 	if buffer.IsReadOnly() {
 		return fmt.Errorf("buffer is read-only")
 	}
 
-	original := buffer.Original()
-	normalized, changed := p.RewriteImpl(original)
+	normalized, changed := p.RewriteImpl(current)
 
 	if changed {
+		if p.debug {
+			fmt.Printf("[DEBUG] DefaultInputTextPlugin.Rewrite: Text changed from '%s' to '%s'\n", current, normalized)
+		}
 		return buffer.SetModified(normalized)
+	} else {
+		if p.debug {
+			fmt.Printf("[DEBUG] DefaultInputTextPlugin.Rewrite: No text changes applied\n")
+		}
 	}
 
 	return nil
@@ -293,4 +300,32 @@ func (p *DefaultInputTextPlugin) CreateNormalizedInputBuffer(original string, gr
 	}
 
 	return buffer, nil
+}
+
+// CreateInputTextPlugin creates a DefaultInputTextPlugin instance
+func (p *DefaultInputTextPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.InputTextPlugin, error) {
+	defaultPlugin := NewDefaultInputTextPlugin()
+
+	// Set up the plugin with configuration
+	err := defaultPlugin.SetUp(settings, resourceDir, grammar)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set up DefaultInputText plugin: %w", err)
+	}
+
+	return defaultPlugin, nil
+}
+
+// CreateOOVProvider creates an OOV provider plugin (not supported by DefaultInputText plugin)
+func (p *DefaultInputTextPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.OOVProviderPlugin, error) {
+	return nil, fmt.Errorf("DefaultInputText plugin does not support OOV provider plugins")
+}
+
+// CreatePathRewriter creates a path rewrite plugin (not supported by DefaultInputText plugin)
+func (p *DefaultInputTextPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.PathRewritePlugin, error) {
+	return nil, fmt.Errorf("DefaultInputText plugin does not support path rewrite plugins")
+}
+
+// GetSupportedTypes returns the plugin types this factory supports
+func (p *DefaultInputTextPlugin) GetSupportedTypes() []plugin.PluginType {
+	return []plugin.PluginType{plugin.PluginTypeInputText}
 }
