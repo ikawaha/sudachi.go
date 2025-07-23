@@ -191,8 +191,7 @@ func (p *DefaultInputTextPlugin) replaceSlow(input string) (string, bool) {
 		}
 
 		// 2. Handle normalization for individual character (matching Rust logic)
-		// Note: ASCII letters (A-Z, a-z) are not lowercased to match Rust CLI behavior
-		needLowercase := unicode.IsUpper(ch) && !isASCIILetter(ch)
+		needLowercase := unicode.IsUpper(ch)
 		needNFKC := !p.shouldIgnore(ch) && !norm.NFKC.IsNormalString(string(ch))
 
 		// Match Rust's (need_lowercase, need_nfkc) pattern matching
@@ -230,11 +229,6 @@ func (p *DefaultInputTextPlugin) replaceSlow(input string) (string, bool) {
 	return builder.String(), changed
 }
 
-// isASCIILetter checks if a rune is an ASCII letter (A-Z or a-z)
-// ASCII letters are not lowercased to match Rust CLI behavior
-func isASCIILetter(r rune) bool {
-	return (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z')
-}
 
 // Note: applySelectiveNFKC and applySelectiveCaseFolding methods have been removed
 // as they are no longer needed. The new replaceSlow method handles normalization
