@@ -280,70 +280,103 @@ func (l *Lattice) GetNodes(pos int) []*Node {
 func (l *Lattice) DumpWithDetails(getSurface func(*Node) string, getPOS func(*Node) string, getConnectionCosts func(*Node) []int) {
 	fmt.Println("=== Lattice dump:")
 
-	nodeID := 0
-	// Iterate through all positions
-	for pos := 0; pos < len(l.endsFull); pos++ {
+	// Collect all nodes from all positions (excluding BOS node at position 0)
+	var allNodes []*Node
+	for pos := 1; pos < len(l.endsFull); pos++ { // Start from 1 to skip BOS node like Rust
 		nodes := l.endsFull[pos]
 		for _, node := range nodes {
-			if node == nil {
-				continue
+			if node != nil {
+				allNodes = append(allNodes, node)
 			}
-
-			// Get surface form
-			surface := "UNKNOWN"
-			if getSurface != nil {
-				surface = getSurface(node)
-			}
-
-			// Get dictionary ID and word ID from the node's WordId
-			var dictID int
-			var wordID uint32
-
-			if node.WordId().IsOOV() {
-				dictID = -1
-				wordID = node.WordId().Word()
-			} else {
-				dictID = 0 // System dictionary (assuming 0 for now)
-				wordID = node.WordId().Word()
-			}
-
-			// Get POS string
-			posStr := "UNKNOWN_POS"
-			if getPOS != nil {
-				posStr = getPOS(node)
-			}
-
-			// Format: node_id: begin end surface(dict_id, word_id) POS left_id right_id node_cost: connection_costs...
-			fmt.Printf("%d: %d %d %s(%d, %d) %s %d %d %d:",
-				nodeID,
-				node.Begin(),
-				node.End(),
-				surface,
-				dictID,
-				wordID,
-				posStr,
-				node.LeftId(),
-				node.RightId(),
-				node.Cost(),
-			)
-
-			// Add connection costs
-			if getConnectionCosts != nil {
-				costs := getConnectionCosts(node)
-				for _, cost := range costs {
-					fmt.Printf(" %d", cost)
-				}
-			} else {
-				fmt.Printf(" COSTS_UNKNOWN")
-			}
-			fmt.Println()
-
-			nodeID++
 		}
+	}
+
+	// Sort nodes in Rust-compatible order: end position (descending) → start position (ascending)
+	// This matches Rust's lattice dump ordering exactly
+	for i := 0; i < len(allNodes)-1; i++ {
+		for j := i + 1; j < len(allNodes); j++ {
+			// Primary sort: end position descending
+			if allNodes[i].End() < allNodes[j].End() {
+				allNodes[i], allNodes[j] = allNodes[j], allNodes[i]
+			} else if allNodes[i].End() == allNodes[j].End() {
+				// Secondary sort: start position ascending
+				if allNodes[i].Begin() > allNodes[j].Begin() {
+					allNodes[i], allNodes[j] = allNodes[j], allNodes[i]
+				}
+			}
+		}
+	}
+
+	// Output sorted nodes
+	for nodeID, node := range allNodes {
+		// Get surface form
+		surface := "UNKNOWN"
+		if getSurface != nil {
+			surface = getSurface(node)
+		}
+
+		// Get dictionary ID and word ID from the node's WordId
+		var dictID int
+		var wordID uint32
+
+		if node.WordId().IsOOV() {
+			dictID = -1
+			wordID = node.WordId().Word()
+		} else {
+			dictID = 0 // System dictionary (assuming 0 for now)
+			wordID = node.WordId().Word()
+		}
+
+		// Get POS string
+		posStr := "UNKNOWN_POS"
+		if getPOS != nil {
+			posStr = getPOS(node)
+		}
+
+		// Format: node_id: begin end surface(dict_id, word_id) POS left_id right_id node_cost: connection_costs...
+		fmt.Printf("%d: %d %d %s(%d, %d) %s %d %d %d:",
+			nodeID,
+			node.Begin(),
+			node.End(),
+			surface,
+			dictID,
+			wordID,
+			posStr,
+			node.LeftId(),
+			node.RightId(),
+			node.Cost(),
+		)
+
+		// Add connection costs
+		if getConnectionCosts != nil {
+			costs := getConnectionCosts(node)
+			for _, cost := range costs {
+				fmt.Printf(" %d", cost)
+			}
+		} else {
+			fmt.Printf(" COSTS_UNKNOWN")
+		}
+		fmt.Println()
 	}
 }
 
 // Dump outputs a basic lattice dump without detailed information
 func (l *Lattice) Dump() {
 	l.DumpWithDetails(nil, nil, nil)
+}
+
+// HasNodes returns true if there are nodes at the given position
+func (l *Lattice) HasNodes(pos int) bool {
+	if pos < 0 || pos >= len(l.endsFull) {
+		return false
+	}
+	return len(l.endsFull[pos]) > 0
+}
+
+// GetNodesAt returns all nodes at the given position
+func (l *Lattice) GetNodesAt(pos int) []*Node {
+	if pos < 0 || pos >= len(l.endsFull) {
+		return nil
+	}
+	return l.endsFull[pos]
 }
