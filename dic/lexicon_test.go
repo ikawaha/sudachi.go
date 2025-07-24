@@ -12,7 +12,7 @@ func TestLexiconLookupCompareWithRust(t *testing.T) {
 
 	sysDict, err := loader.LoadSystemDictionary(dicPath)
 	if err != nil {
-		t.Skipf("Test dictionary not found: %v", err)
+		t.Fatalf("Failed to load system dictionary: %v", err)
 		return
 	}
 
@@ -97,8 +97,7 @@ func TestLexiconAllRustCases(t *testing.T) {
 
 	sysDict, err := loader.LoadSystemDictionary(dicPath)
 	if err != nil {
-		t.Skipf("Test dictionary not found: %v", err)
-		return
+		t.Fatalf("Failed to load system dictionary: %v", err)
 	}
 
 	lexicon := sysDict.LexiconSet()
@@ -174,7 +173,7 @@ func TestLexiconLookupHi(t *testing.T) {
 	loader := NewDictionaryLoader()
 	dict, err := loader.LoadSystemDictionary("../resources/system.dic")
 	if err != nil {
-		t.Skipf("System dictionary not found: %v", err)
+		t.Fatalf("Failed to load system dictionary: %v", err)
 	}
 
 	lexicon := dict.LexiconSet()
@@ -231,12 +230,6 @@ func TestLexiconLookupHi(t *testing.T) {
 	// (Internal implementation is not accessible via LexiconSet interface)
 	t.Logf("Manual trie traversal test disabled for LexiconSet compatibility")
 	return
-}
-
-// TestTrieBitManipulationForLexicon tests the trie bit manipulation functions
-func TestTrieBitManipulationForLexicon(t *testing.T) {
-	// Disabled for LexiconSet compatibility (trie not accessible)
-	t.Skipf("Test disabled for LexiconSet compatibility")
 }
 
 // TestCompareDictionaryFiles compares our test dictionary with Rust's

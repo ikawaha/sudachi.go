@@ -527,3 +527,52 @@ func (cc *CharacterCategory) GetCategoryInfo(categoryType CategoryType) *Categor
 	}
 	return nil // Rust equivalent: None case
 }
+
+// CategoryRange represents a character range with its category
+// This matches Rust's iterator output format
+type CategoryRange struct {
+	Range struct {
+		Start uint32
+		End   uint32
+	}
+	Category CategoryType
+}
+
+// GetRanges returns all character ranges with their categories
+// This matches Rust's character_category.iter() functionality
+func (cc *CharacterCategory) GetRanges() []CategoryRange {
+	var ranges []CategoryRange
+
+	// Handle the first range [0, boundaries[0])
+	if len(cc.boundaries) > 0 {
+		ranges = append(ranges, CategoryRange{
+			Range:    struct{ Start, End uint32 }{0, cc.boundaries[0]},
+			Category: cc.categories[0],
+		})
+	}
+
+	// Handle ranges between boundaries
+	for i := 0; i < len(cc.boundaries)-1; i++ {
+		ranges = append(ranges, CategoryRange{
+			Range:    struct{ Start, End uint32 }{cc.boundaries[i], cc.boundaries[i+1]},
+			Category: cc.categories[i+1],
+		})
+	}
+
+	// Handle the last range [last_boundary, 0xFFFFFFFF)
+	if len(cc.boundaries) > 0 {
+		lastIdx := len(cc.boundaries) - 1
+		ranges = append(ranges, CategoryRange{
+			Range:    struct{ Start, End uint32 }{cc.boundaries[lastIdx], 0xFFFFFFFF},
+			Category: cc.categories[lastIdx+1],
+		})
+	} else {
+		// No boundaries, everything is DEFAULT
+		ranges = append(ranges, CategoryRange{
+			Range:    struct{ Start, End uint32 }{0, 0xFFFFFFFF},
+			Category: CategoryDefault,
+		})
+	}
+
+	return ranges
+}
