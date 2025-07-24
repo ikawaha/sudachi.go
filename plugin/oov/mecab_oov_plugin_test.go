@@ -98,15 +98,14 @@ ALPHA,5139,5139,11633,名詞,普通名詞,一般,*,*,*
 }
 
 func TestMeCabOovPluginFromResourceDir(t *testing.T) {
-	resourceDir := "../sudachi.rs/resources"
+	resourceDir := "../../sudachi.rs/resources"
 
 	// Create mock grammar for testing
 	grammar := zeroGrammar()
 
 	plugin, err := NewMeCabOovPluginFromResourceDir(resourceDir, grammar)
 	if err != nil {
-		t.Skipf("Skipping test due to missing resource files: %v", err)
-		return
+		t.Fatalf("Failed to create plugin: %v", err)
 	}
 
 	// Test that plugin was created successfully

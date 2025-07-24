@@ -284,9 +284,6 @@ func (p *IgnoreYomiganaPlugin) anyOfPattern(charSet map[rune]bool) string {
 func (p *IgnoreYomiganaPlugin) Rewrite(buffer *input.InputBuffer) error {
 	// Get current state of buffer (which includes changes from previous plugins)
 	current := buffer.Modified()
-	if p.debug {
-		fmt.Printf("[DEBUG] IgnoreYomiganaPlugin.Rewrite: Called with input '%s'\n", current)
-	}
 
 	if buffer.IsReadOnly() {
 		return fmt.Errorf("buffer is read-only")
@@ -315,14 +312,7 @@ func (p *IgnoreYomiganaPlugin) Rewrite(buffer *input.InputBuffer) error {
 
 	// Apply modification if any changes were made
 	if modified != current {
-		if p.debug {
-			fmt.Printf("[DEBUG] IgnoreYomiganaPlugin.Rewrite: Text changed from '%s' to '%s'\n", current, modified)
-		}
 		return buffer.SetModified(modified)
-	} else {
-		if p.debug {
-			fmt.Printf("[DEBUG] IgnoreYomiganaPlugin.Rewrite: No text changes applied\n")
-		}
 	}
 
 	return nil

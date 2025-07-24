@@ -229,7 +229,6 @@ func (p *DefaultInputTextPlugin) replaceSlow(input string) (string, bool) {
 	return builder.String(), changed
 }
 
-
 // Note: applySelectiveNFKC and applySelectiveCaseFolding methods have been removed
 // as they are no longer needed. The new replaceSlow method handles normalization
 // character-by-character as per the Rust implementation.
@@ -243,9 +242,6 @@ func (p *DefaultInputTextPlugin) GetName() string {
 func (p *DefaultInputTextPlugin) Rewrite(buffer *input.InputBuffer) error {
 	// Get current state of buffer (which includes changes from previous plugins)
 	current := buffer.Modified()
-	if p.debug {
-		fmt.Printf("[DEBUG] DefaultInputTextPlugin.Rewrite: Called with input '%s'\n", current)
-	}
 
 	if buffer.IsReadOnly() {
 		return fmt.Errorf("buffer is read-only")
@@ -254,14 +250,7 @@ func (p *DefaultInputTextPlugin) Rewrite(buffer *input.InputBuffer) error {
 	normalized, changed := p.RewriteImpl(current)
 
 	if changed {
-		if p.debug {
-			fmt.Printf("[DEBUG] DefaultInputTextPlugin.Rewrite: Text changed from '%s' to '%s'\n", current, normalized)
-		}
 		return buffer.SetModified(normalized)
-	} else {
-		if p.debug {
-			fmt.Printf("[DEBUG] DefaultInputTextPlugin.Rewrite: No text changes applied\n")
-		}
 	}
 
 	return nil

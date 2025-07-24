@@ -28,8 +28,7 @@ func TestDefaultInputTextPlugin(t *testing.T) {
 	plugin := NewDefaultInputTextPlugin()
 	err := plugin.SetUpFromData()
 	if err != nil {
-		t.Skipf("Skipping test due to setup error: %v", err)
-		return
+		t.Fatalf("Failed to set up default input text plugin: %v", err)
 	}
 
 	testCases := []struct {
@@ -61,8 +60,8 @@ func TestPluginInputBufferIntegration(t *testing.T) {
 	plugin := NewDefaultInputTextPlugin()
 	err := plugin.SetUpFromData()
 	if err != nil {
-		t.Skipf("Skipping test due to setup error: %v", err)
-		return
+		t.Fatalf("Failed to setup plugin: %v", err)
+
 	}
 
 	original := "ｶﾞｷﾞｸﾞ"
@@ -87,8 +86,7 @@ func TestPluginJapaneseText(t *testing.T) {
 	plugin := NewDefaultInputTextPlugin()
 	err := plugin.SetUpFromData()
 	if err != nil {
-		t.Skipf("Skipping test due to setup error: %v", err)
-		return
+		t.Fatalf("Failed to setup plugin: %v", err)
 	}
 
 	// Test with Japanese text containing half-width katakana
@@ -110,8 +108,7 @@ func TestDefaultInputTextPluginNormalization(t *testing.T) {
 	plugin := NewDefaultInputTextPlugin()
 	err := plugin.SetUpFromData()
 	if err != nil {
-		t.Skipf("Skipping Rust compatibility test: %v", err)
-		return
+		t.Fatalf("Failed to setup plugin: %v", err)
 	}
 
 	testCases := []struct {
@@ -265,8 +262,7 @@ func TestPluginFastVsSlowPath(t *testing.T) {
 	plugin := NewDefaultInputTextPlugin()
 	err := plugin.SetUpFromData()
 	if err != nil {
-		t.Skipf("Skipping test due to setup error: %v", err)
-		return
+		t.Fatalf("Failed to setup plugin: %v", err)
 	}
 
 	testCases := []struct {
@@ -306,8 +302,7 @@ func TestPluginIgnoreNormalizeChars(t *testing.T) {
 	plugin := NewDefaultInputTextPlugin()
 	err := plugin.SetUpFromData()
 	if err != nil {
-		t.Skipf("Skipping test due to setup error: %v", err)
-		return
+		t.Fatalf("plugin setup failed: %v", err)
 	}
 
 	testCases := []struct {
