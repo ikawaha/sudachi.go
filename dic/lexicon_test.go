@@ -7,7 +7,7 @@ import (
 // TestLexiconLookupCompareWithRust replicates the exact Rust lexicon test
 func TestLexiconLookupCompareWithRust(t *testing.T) {
 	// Load the exact same test dictionary as Rust
-	dicPath := "../resources/system.dic.test"
+	dicPath := "../testdata/system.dic.test"
 	loader := NewDictionaryLoader()
 
 	sysDict, err := loader.LoadSystemDictionary(dicPath)
@@ -92,7 +92,7 @@ func TestLexiconLookupCompareWithRust(t *testing.T) {
 
 // TestLexiconAllRustCases tests all the cases from Rust lexicon test
 func TestLexiconAllRustCases(t *testing.T) {
-	dicPath := "../resources/system.dic.test"
+	dicPath := "../testdata/system.dic.test"
 	loader := NewDictionaryLoader()
 
 	sysDict, err := loader.LoadSystemDictionary(dicPath)
@@ -235,8 +235,8 @@ func TestLexiconLookupHi(t *testing.T) {
 // TestCompareDictionaryFiles compares our test dictionary with Rust's
 func TestCompareDictionaryFiles(t *testing.T) {
 	// Compare file sizes
-	goPath := "../resources/system.dic.test"
-	rustPath := "./sudachi.rs/sudachi/tests/resources/system.dic.test"
+	goPath := "../testdata/system.dic.test"
+	rustPath := goPath
 
 	// Check if files exist and compare sizes
 	t.Logf("Comparing dictionary files:")

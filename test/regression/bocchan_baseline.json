@@ -1,0 +1,1210 @@
+{
+  "test_sentences": [
+    {
+      "sentence": "親譲りの無鉄砲で小供の時から損ばかりしている。",
+      "mode": "B",
+      "morphemes": [
+        {
+          "surface": "親",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "オヤ",
+          "normalized_form": "親",
+          "dictionary_form": "親"
+        },
+        {
+          "surface": "譲り",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "ユズリ",
+          "normalized_form": "譲り",
+          "dictionary_form": "譲り"
+        },
+        {
+          "surface": "の",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ノ",
+          "normalized_form": "の",
+          "dictionary_form": "の"
+        },
+        {
+          "surface": "無鉄砲",
+          "pos": "名詞,普通名詞,形状詞可能,*,*,*",
+          "reading": "ムテッポウ",
+          "normalized_form": "無鉄砲",
+          "dictionary_form": "無鉄砲"
+        },
+        {
+          "surface": "で",
+          "pos": "助動詞,*,*,*,助動詞-ダ,連用形-一般",
+          "reading": "デ",
+          "normalized_form": "だ",
+          "dictionary_form": "だ"
+        },
+        {
+          "surface": "小供",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "コドモ",
+          "normalized_form": "子供",
+          "dictionary_form": "小供"
+        },
+        {
+          "surface": "の",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ノ",
+          "normalized_form": "の",
+          "dictionary_form": "の"
+        },
+        {
+          "surface": "時",
+          "pos": "名詞,普通名詞,副詞可能,*,*,*",
+          "reading": "トキ",
+          "normalized_form": "時",
+          "dictionary_form": "時"
+        },
+        {
+          "surface": "から",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "カラ",
+          "normalized_form": "から",
+          "dictionary_form": "から"
+        },
+        {
+          "surface": "損",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "ソン",
+          "normalized_form": "損",
+          "dictionary_form": "損"
+        },
+        {
+          "surface": "ばかり",
+          "pos": "助詞,副助詞,*,*,*,*",
+          "reading": "バカリ",
+          "normalized_form": "ばかり",
+          "dictionary_form": "ばかり"
+        },
+        {
+          "surface": "し",
+          "pos": "動詞,非自立可能,*,*,サ行変格,連用形-一般",
+          "reading": "シ",
+          "normalized_form": "為る",
+          "dictionary_form": "する"
+        },
+        {
+          "surface": "て",
+          "pos": "助詞,接続助詞,*,*,*,*",
+          "reading": "テ",
+          "normalized_form": "て",
+          "dictionary_form": "て"
+        },
+        {
+          "surface": "いる",
+          "pos": "動詞,非自立可能,*,*,上一段-ア行,終止形-一般",
+          "reading": "イル",
+          "normalized_form": "居る",
+          "dictionary_form": "いる"
+        },
+        {
+          "surface": "。",
+          "pos": "補助記号,句点,*,*,*,*",
+          "reading": "。",
+          "normalized_form": "。",
+          "dictionary_form": "。"
+        }
+      ],
+      "morph_count": 15
+    },
+    {
+      "sentence": "小学校に居る時分学校の二階から飛び降りて一週間ほど腰を抜かした事がある。",
+      "mode": "B",
+      "morphemes": [
+        {
+          "surface": "小学校",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "ショウガッコウ",
+          "normalized_form": "小学校",
+          "dictionary_form": "小学校"
+        },
+        {
+          "surface": "に",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ニ",
+          "normalized_form": "に",
+          "dictionary_form": "に"
+        },
+        {
+          "surface": "居る",
+          "pos": "動詞,非自立可能,*,*,上一段-ア行,連体形-一般",
+          "reading": "イル",
+          "normalized_form": "居る",
+          "dictionary_form": "居る"
+        },
+        {
+          "surface": "時分",
+          "pos": "名詞,普通名詞,副詞可能,*,*,*",
+          "reading": "ジブン",
+          "normalized_form": "時分",
+          "dictionary_form": "時分"
+        },
+        {
+          "surface": "学校",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "ガッコウ",
+          "normalized_form": "学校",
+          "dictionary_form": "学校"
+        },
+        {
+          "surface": "の",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ノ",
+          "normalized_form": "の",
+          "dictionary_form": "の"
+        },
+        {
+          "surface": "二",
+          "pos": "名詞,数詞,*,*,*,*",
+          "reading": "ニ",
+          "normalized_form": "2",
+          "dictionary_form": "二"
+        },
+        {
+          "surface": "階",
+          "pos": "名詞,普通名詞,助数詞可能,*,*,*",
+          "reading": "カイ",
+          "normalized_form": "階",
+          "dictionary_form": "階"
+        },
+        {
+          "surface": "から",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "カラ",
+          "normalized_form": "から",
+          "dictionary_form": "から"
+        },
+        {
+          "surface": "飛び降り",
+          "pos": "動詞,一般,*,*,上一段-ラ行,連用形-一般",
+          "reading": "トビオリ",
+          "normalized_form": "飛び下りる",
+          "dictionary_form": "飛び降りる"
+        },
+        {
+          "surface": "て",
+          "pos": "助詞,接続助詞,*,*,*,*",
+          "reading": "テ",
+          "normalized_form": "て",
+          "dictionary_form": "て"
+        },
+        {
+          "surface": "一",
+          "pos": "名詞,数詞,*,*,*,*",
+          "reading": "イチ",
+          "normalized_form": "1",
+          "dictionary_form": "一"
+        },
+        {
+          "surface": "週間",
+          "pos": "名詞,普通名詞,助数詞可能,*,*,*",
+          "reading": "シュウカン",
+          "normalized_form": "週間",
+          "dictionary_form": "週間"
+        },
+        {
+          "surface": "ほど",
+          "pos": "助詞,副助詞,*,*,*,*",
+          "reading": "ホド",
+          "normalized_form": "ほど",
+          "dictionary_form": "ほど"
+        },
+        {
+          "surface": "腰",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "コシ",
+          "normalized_form": "腰",
+          "dictionary_form": "腰"
+        },
+        {
+          "surface": "を",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ヲ",
+          "normalized_form": "を",
+          "dictionary_form": "を"
+        },
+        {
+          "surface": "抜かし",
+          "pos": "動詞,一般,*,*,五段-サ行,連用形-一般",
+          "reading": "ヌカシ",
+          "normalized_form": "抜かす",
+          "dictionary_form": "抜かす"
+        },
+        {
+          "surface": "た",
+          "pos": "助動詞,*,*,*,助動詞-タ,連体形-一般",
+          "reading": "タ",
+          "normalized_form": "た",
+          "dictionary_form": "た"
+        },
+        {
+          "surface": "事",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "コト",
+          "normalized_form": "事",
+          "dictionary_form": "事"
+        },
+        {
+          "surface": "が",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ガ",
+          "normalized_form": "が",
+          "dictionary_form": "が"
+        },
+        {
+          "surface": "ある",
+          "pos": "動詞,非自立可能,*,*,五段-ラ行,終止形-一般",
+          "reading": "アル",
+          "normalized_form": "有る",
+          "dictionary_form": "ある"
+        },
+        {
+          "surface": "。",
+          "pos": "補助記号,句点,*,*,*,*",
+          "reading": "。",
+          "normalized_form": "。",
+          "dictionary_form": "。"
+        }
+      ],
+      "morph_count": 22
+    },
+    {
+      "sentence": "なぜそんな無闇をしたと聞く人があるかも知れぬ。",
+      "mode": "B",
+      "morphemes": [
+        {
+          "surface": "なぜ",
+          "pos": "副詞,*,*,*,*,*",
+          "reading": "ナゼ",
+          "normalized_form": "何故",
+          "dictionary_form": "なぜ"
+        },
+        {
+          "surface": "そんな",
+          "pos": "連体詞,*,*,*,*,*",
+          "reading": "ソンナ",
+          "normalized_form": "そんな",
+          "dictionary_form": "そんな"
+        },
+        {
+          "surface": "無闇",
+          "pos": "形状詞,一般,*,*,*,*",
+          "reading": "ムヤミ",
+          "normalized_form": "無闇",
+          "dictionary_form": "無闇"
+        },
+        {
+          "surface": "を",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ヲ",
+          "normalized_form": "を",
+          "dictionary_form": "を"
+        },
+        {
+          "surface": "し",
+          "pos": "動詞,非自立可能,*,*,サ行変格,連用形-一般",
+          "reading": "シ",
+          "normalized_form": "為る",
+          "dictionary_form": "する"
+        },
+        {
+          "surface": "た",
+          "pos": "助動詞,*,*,*,助動詞-タ,終止形-一般",
+          "reading": "タ",
+          "normalized_form": "た",
+          "dictionary_form": "た"
+        },
+        {
+          "surface": "と",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ト",
+          "normalized_form": "と",
+          "dictionary_form": "と"
+        },
+        {
+          "surface": "聞く",
+          "pos": "動詞,一般,*,*,五段-カ行,連体形-一般",
+          "reading": "キク",
+          "normalized_form": "聞く",
+          "dictionary_form": "聞く"
+        },
+        {
+          "surface": "人",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "ヒト",
+          "normalized_form": "人",
+          "dictionary_form": "人"
+        },
+        {
+          "surface": "が",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ガ",
+          "normalized_form": "が",
+          "dictionary_form": "が"
+        },
+        {
+          "surface": "ある",
+          "pos": "動詞,非自立可能,*,*,五段-ラ行,終止形-一般",
+          "reading": "アル",
+          "normalized_form": "有る",
+          "dictionary_form": "ある"
+        },
+        {
+          "surface": "か",
+          "pos": "助詞,副助詞,*,*,*,*",
+          "reading": "カ",
+          "normalized_form": "か",
+          "dictionary_form": "か"
+        },
+        {
+          "surface": "も",
+          "pos": "助詞,係助詞,*,*,*,*",
+          "reading": "モ",
+          "normalized_form": "も",
+          "dictionary_form": "も"
+        },
+        {
+          "surface": "知れ",
+          "pos": "動詞,一般,*,*,下一段-ラ行,未然形-一般",
+          "reading": "シレ",
+          "normalized_form": "知れる",
+          "dictionary_form": "知れる"
+        },
+        {
+          "surface": "ぬ",
+          "pos": "助動詞,*,*,*,助動詞-ヌ,終止形-一般",
+          "reading": "ヌ",
+          "normalized_form": "ず",
+          "dictionary_form": "ぬ"
+        },
+        {
+          "surface": "。",
+          "pos": "補助記号,句点,*,*,*,*",
+          "reading": "。",
+          "normalized_form": "。",
+          "dictionary_form": "。"
+        }
+      ],
+      "morph_count": 16
+    },
+    {
+      "sentence": "別段深い理由でもない。",
+      "mode": "B",
+      "morphemes": [
+        {
+          "surface": "別段",
+          "pos": "副詞,*,*,*,*,*",
+          "reading": "ベツダン",
+          "normalized_form": "別段",
+          "dictionary_form": "別段"
+        },
+        {
+          "surface": "深い",
+          "pos": "形容詞,一般,*,*,形容詞,連体形-一般",
+          "reading": "フカイ",
+          "normalized_form": "深い",
+          "dictionary_form": "深い"
+        },
+        {
+          "surface": "理由",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "リユウ",
+          "normalized_form": "理由",
+          "dictionary_form": "理由"
+        },
+        {
+          "surface": "で",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "デ",
+          "normalized_form": "で",
+          "dictionary_form": "で"
+        },
+        {
+          "surface": "も",
+          "pos": "助詞,係助詞,*,*,*,*",
+          "reading": "モ",
+          "normalized_form": "も",
+          "dictionary_form": "も"
+        },
+        {
+          "surface": "ない",
+          "pos": "形容詞,非自立可能,*,*,形容詞,終止形-一般",
+          "reading": "ナイ",
+          "normalized_form": "無い",
+          "dictionary_form": "ない"
+        },
+        {
+          "surface": "。",
+          "pos": "補助記号,句点,*,*,*,*",
+          "reading": "。",
+          "normalized_form": "。",
+          "dictionary_form": "。"
+        }
+      ],
+      "morph_count": 7
+    },
+    {
+      "sentence": "弱虫やーい。",
+      "mode": "B",
+      "morphemes": [
+        {
+          "surface": "弱虫",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "ヨワムシ",
+          "normalized_form": "弱虫",
+          "dictionary_form": "弱虫"
+        },
+        {
+          "surface": "やーい",
+          "pos": "感動詞,一般,*,*,*,*",
+          "reading": "ヤーイ",
+          "normalized_form": "やい",
+          "dictionary_form": "やーい"
+        },
+        {
+          "surface": "。",
+          "pos": "補助記号,句点,*,*,*,*",
+          "reading": "。",
+          "normalized_form": "。",
+          "dictionary_form": "。"
+        }
+      ],
+      "morph_count": 3
+    },
+    {
+      "sentence": "と囃したからである。",
+      "mode": "B",
+      "morphemes": [
+        {
+          "surface": "と",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ト",
+          "normalized_form": "と",
+          "dictionary_form": "と"
+        },
+        {
+          "surface": "囃し",
+          "pos": "動詞,一般,*,*,五段-サ行,連用形-一般",
+          "reading": "ハヤシ",
+          "normalized_form": "囃す",
+          "dictionary_form": "囃す"
+        },
+        {
+          "surface": "た",
+          "pos": "助動詞,*,*,*,助動詞-タ,終止形-一般",
+          "reading": "タ",
+          "normalized_form": "た",
+          "dictionary_form": "た"
+        },
+        {
+          "surface": "から",
+          "pos": "助詞,接続助詞,*,*,*,*",
+          "reading": "カラ",
+          "normalized_form": "から",
+          "dictionary_form": "から"
+        },
+        {
+          "surface": "で",
+          "pos": "助動詞,*,*,*,助動詞-ダ,連用形-一般",
+          "reading": "デ",
+          "normalized_form": "だ",
+          "dictionary_form": "だ"
+        },
+        {
+          "surface": "ある",
+          "pos": "動詞,非自立可能,*,*,五段-ラ行,終止形-一般",
+          "reading": "アル",
+          "normalized_form": "有る",
+          "dictionary_form": "ある"
+        },
+        {
+          "surface": "。",
+          "pos": "補助記号,句点,*,*,*,*",
+          "reading": "。",
+          "normalized_form": "。",
+          "dictionary_form": "。"
+        }
+      ],
+      "morph_count": 7
+    },
+    {
+      "sentence": "これは命より大事な栗だ。",
+      "mode": "B",
+      "morphemes": [
+        {
+          "surface": "これ",
+          "pos": "代名詞,*,*,*,*,*",
+          "reading": "コレ",
+          "normalized_form": "此れ",
+          "dictionary_form": "これ"
+        },
+        {
+          "surface": "は",
+          "pos": "助詞,係助詞,*,*,*,*",
+          "reading": "ハ",
+          "normalized_form": "は",
+          "dictionary_form": "は"
+        },
+        {
+          "surface": "命",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "イノチ",
+          "normalized_form": "命",
+          "dictionary_form": "命"
+        },
+        {
+          "surface": "より",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ヨリ",
+          "normalized_form": "より",
+          "dictionary_form": "より"
+        },
+        {
+          "surface": "大事",
+          "pos": "形状詞,一般,*,*,*,*",
+          "reading": "ダイジ",
+          "normalized_form": "大事",
+          "dictionary_form": "大事"
+        },
+        {
+          "surface": "な",
+          "pos": "助動詞,*,*,*,助動詞-ダ,連体形-一般",
+          "reading": "ナ",
+          "normalized_form": "だ",
+          "dictionary_form": "だ"
+        },
+        {
+          "surface": "栗",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "クリ",
+          "normalized_form": "栗",
+          "dictionary_form": "栗"
+        },
+        {
+          "surface": "だ",
+          "pos": "助動詞,*,*,*,助動詞-ダ,終止形-一般",
+          "reading": "ダ",
+          "normalized_form": "だ",
+          "dictionary_form": "だ"
+        },
+        {
+          "surface": "。",
+          "pos": "補助記号,句点,*,*,*,*",
+          "reading": "。",
+          "normalized_form": "。",
+          "dictionary_form": "。"
+        }
+      ],
+      "morph_count": 9
+    },
+    {
+      "sentence": "勘太郎は無論弱虫である。",
+      "mode": "B",
+      "morphemes": [
+        {
+          "surface": "勘太郎",
+          "pos": "名詞,固有名詞,人名,名,*,*",
+          "reading": "カンタロウ",
+          "normalized_form": "勘太郎",
+          "dictionary_form": "勘太郎"
+        },
+        {
+          "surface": "は",
+          "pos": "助詞,係助詞,*,*,*,*",
+          "reading": "ハ",
+          "normalized_form": "は",
+          "dictionary_form": "は"
+        },
+        {
+          "surface": "無論",
+          "pos": "副詞,*,*,*,*,*",
+          "reading": "ムロン",
+          "normalized_form": "無論",
+          "dictionary_form": "無論"
+        },
+        {
+          "surface": "弱虫",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "ヨワムシ",
+          "normalized_form": "弱虫",
+          "dictionary_form": "弱虫"
+        },
+        {
+          "surface": "で",
+          "pos": "助動詞,*,*,*,助動詞-ダ,連用形-一般",
+          "reading": "デ",
+          "normalized_form": "だ",
+          "dictionary_form": "だ"
+        },
+        {
+          "surface": "ある",
+          "pos": "動詞,非自立可能,*,*,五段-ラ行,終止形-一般",
+          "reading": "アル",
+          "normalized_form": "有る",
+          "dictionary_form": "ある"
+        },
+        {
+          "surface": "。",
+          "pos": "補助記号,句点,*,*,*,*",
+          "reading": "。",
+          "normalized_form": "。",
+          "dictionary_form": "。"
+        }
+      ],
+      "morph_count": 7
+    },
+    {
+      "sentence": "弱虫の癖に四つ目垣を乗りこえて、栗を盗みにくる。",
+      "mode": "B",
+      "morphemes": [
+        {
+          "surface": "弱虫",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "ヨワムシ",
+          "normalized_form": "弱虫",
+          "dictionary_form": "弱虫"
+        },
+        {
+          "surface": "の",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ノ",
+          "normalized_form": "の",
+          "dictionary_form": "の"
+        },
+        {
+          "surface": "癖",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "クセ",
+          "normalized_form": "癖",
+          "dictionary_form": "癖"
+        },
+        {
+          "surface": "に",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ニ",
+          "normalized_form": "に",
+          "dictionary_form": "に"
+        },
+        {
+          "surface": "四",
+          "pos": "名詞,数詞,*,*,*,*",
+          "reading": "ヨン",
+          "normalized_form": "4",
+          "dictionary_form": "四"
+        },
+        {
+          "surface": "つ",
+          "pos": "接尾辞,名詞的,助数詞,*,*,*",
+          "reading": "ツ",
+          "normalized_form": "つ",
+          "dictionary_form": "つ"
+        },
+        {
+          "surface": "目",
+          "pos": "接尾辞,名詞的,一般,*,*,*",
+          "reading": "メ",
+          "normalized_form": "目",
+          "dictionary_form": "目"
+        },
+        {
+          "surface": "垣",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "カキ",
+          "normalized_form": "垣",
+          "dictionary_form": "垣"
+        },
+        {
+          "surface": "を",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ヲ",
+          "normalized_form": "を",
+          "dictionary_form": "を"
+        },
+        {
+          "surface": "乗りこえ",
+          "pos": "動詞,一般,*,*,下一段-ア行,連用形-一般",
+          "reading": "ノリコエ",
+          "normalized_form": "乗り越える",
+          "dictionary_form": "乗りこえる"
+        },
+        {
+          "surface": "て",
+          "pos": "助詞,接続助詞,*,*,*,*",
+          "reading": "テ",
+          "normalized_form": "て",
+          "dictionary_form": "て"
+        },
+        {
+          "surface": "、",
+          "pos": "補助記号,読点,*,*,*,*",
+          "reading": "、",
+          "normalized_form": "、",
+          "dictionary_form": "、"
+        },
+        {
+          "surface": "栗",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "クリ",
+          "normalized_form": "栗",
+          "dictionary_form": "栗"
+        },
+        {
+          "surface": "を",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ヲ",
+          "normalized_form": "を",
+          "dictionary_form": "を"
+        },
+        {
+          "surface": "盗み",
+          "pos": "動詞,一般,*,*,五段-マ行,連用形-一般",
+          "reading": "ヌスミ",
+          "normalized_form": "盗む",
+          "dictionary_form": "盗む"
+        },
+        {
+          "surface": "に",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ニ",
+          "normalized_form": "に",
+          "dictionary_form": "に"
+        },
+        {
+          "surface": "くる",
+          "pos": "動詞,非自立可能,*,*,カ行変格,終止形-一般",
+          "reading": "クル",
+          "normalized_form": "来る",
+          "dictionary_form": "くる"
+        },
+        {
+          "surface": "。",
+          "pos": "補助記号,句点,*,*,*,*",
+          "reading": "。",
+          "normalized_form": "。",
+          "dictionary_form": "。"
+        }
+      ],
+      "morph_count": 18
+    },
+    {
+      "sentence": "そんなら君の指を切ってみろと注文したから、何だ指ぐらいこの通りだと右の手の親指の甲をはすに切り込んだ。",
+      "mode": "B",
+      "morphemes": [
+        {
+          "surface": "そん",
+          "pos": "代名詞,*,*,*,*,*",
+          "reading": "ソン",
+          "normalized_form": "其れ",
+          "dictionary_form": "そん"
+        },
+        {
+          "surface": "なら",
+          "pos": "助動詞,*,*,*,助動詞-ダ,仮定形-一般",
+          "reading": "ナラ",
+          "normalized_form": "だ",
+          "dictionary_form": "だ"
+        },
+        {
+          "surface": "君",
+          "pos": "代名詞,*,*,*,*,*",
+          "reading": "キミ",
+          "normalized_form": "君",
+          "dictionary_form": "君"
+        },
+        {
+          "surface": "の",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ノ",
+          "normalized_form": "の",
+          "dictionary_form": "の"
+        },
+        {
+          "surface": "指",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "ユビ",
+          "normalized_form": "指",
+          "dictionary_form": "指"
+        },
+        {
+          "surface": "を",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ヲ",
+          "normalized_form": "を",
+          "dictionary_form": "を"
+        },
+        {
+          "surface": "切っ",
+          "pos": "動詞,非自立可能,*,*,五段-ラ行,連用形-促音便",
+          "reading": "キッ",
+          "normalized_form": "切る",
+          "dictionary_form": "切る"
+        },
+        {
+          "surface": "て",
+          "pos": "助詞,接続助詞,*,*,*,*",
+          "reading": "テ",
+          "normalized_form": "て",
+          "dictionary_form": "て"
+        },
+        {
+          "surface": "みろ",
+          "pos": "動詞,非自立可能,*,*,上一段-マ行,命令形",
+          "reading": "ミロ",
+          "normalized_form": "見る",
+          "dictionary_form": "みる"
+        },
+        {
+          "surface": "と",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ト",
+          "normalized_form": "と",
+          "dictionary_form": "と"
+        },
+        {
+          "surface": "注文",
+          "pos": "名詞,普通名詞,サ変可能,*,*,*",
+          "reading": "チュウモン",
+          "normalized_form": "注文",
+          "dictionary_form": "注文"
+        },
+        {
+          "surface": "し",
+          "pos": "動詞,非自立可能,*,*,サ行変格,連用形-一般",
+          "reading": "シ",
+          "normalized_form": "為る",
+          "dictionary_form": "する"
+        },
+        {
+          "surface": "た",
+          "pos": "助動詞,*,*,*,助動詞-タ,終止形-一般",
+          "reading": "タ",
+          "normalized_form": "た",
+          "dictionary_form": "た"
+        },
+        {
+          "surface": "から",
+          "pos": "助詞,接続助詞,*,*,*,*",
+          "reading": "カラ",
+          "normalized_form": "から",
+          "dictionary_form": "から"
+        },
+        {
+          "surface": "、",
+          "pos": "補助記号,読点,*,*,*,*",
+          "reading": "、",
+          "normalized_form": "、",
+          "dictionary_form": "、"
+        },
+        {
+          "surface": "何",
+          "pos": "代名詞,*,*,*,*,*",
+          "reading": "ナン",
+          "normalized_form": "何",
+          "dictionary_form": "何"
+        },
+        {
+          "surface": "だ",
+          "pos": "助動詞,*,*,*,助動詞-ダ,終止形-一般",
+          "reading": "ダ",
+          "normalized_form": "だ",
+          "dictionary_form": "だ"
+        },
+        {
+          "surface": "指",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "ユビ",
+          "normalized_form": "指",
+          "dictionary_form": "指"
+        },
+        {
+          "surface": "ぐらい",
+          "pos": "助詞,副助詞,*,*,*,*",
+          "reading": "グライ",
+          "normalized_form": "くらい",
+          "dictionary_form": "ぐらい"
+        },
+        {
+          "surface": "この",
+          "pos": "連体詞,*,*,*,*,*",
+          "reading": "コノ",
+          "normalized_form": "此の",
+          "dictionary_form": "この"
+        },
+        {
+          "surface": "通り",
+          "pos": "名詞,普通名詞,助数詞可能,*,*,*",
+          "reading": "トオリ",
+          "normalized_form": "通り",
+          "dictionary_form": "通り"
+        },
+        {
+          "surface": "だ",
+          "pos": "助動詞,*,*,*,助動詞-ダ,終止形-一般",
+          "reading": "ダ",
+          "normalized_form": "だ",
+          "dictionary_form": "だ"
+        },
+        {
+          "surface": "と",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ト",
+          "normalized_form": "と",
+          "dictionary_form": "と"
+        },
+        {
+          "surface": "右",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "ミギ",
+          "normalized_form": "右",
+          "dictionary_form": "右"
+        },
+        {
+          "surface": "の",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ノ",
+          "normalized_form": "の",
+          "dictionary_form": "の"
+        },
+        {
+          "surface": "手",
+          "pos": "名詞,普通名詞,助数詞可能,*,*,*",
+          "reading": "テ",
+          "normalized_form": "手",
+          "dictionary_form": "手"
+        },
+        {
+          "surface": "の",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ノ",
+          "normalized_form": "の",
+          "dictionary_form": "の"
+        },
+        {
+          "surface": "親指",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "オヤユビ",
+          "normalized_form": "親指",
+          "dictionary_form": "親指"
+        },
+        {
+          "surface": "の",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ノ",
+          "normalized_form": "の",
+          "dictionary_form": "の"
+        },
+        {
+          "surface": "甲",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "コウ",
+          "normalized_form": "甲",
+          "dictionary_form": "甲"
+        },
+        {
+          "surface": "を",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ヲ",
+          "normalized_form": "を",
+          "dictionary_form": "を"
+        },
+        {
+          "surface": "はす",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "ハス",
+          "normalized_form": "はす",
+          "dictionary_form": "はす"
+        },
+        {
+          "surface": "に",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ニ",
+          "normalized_form": "に",
+          "dictionary_form": "に"
+        },
+        {
+          "surface": "切り込ん",
+          "pos": "動詞,一般,*,*,五段-マ行,連用形-撥音便",
+          "reading": "キリコン",
+          "normalized_form": "切り込む",
+          "dictionary_form": "切り込む"
+        },
+        {
+          "surface": "だ",
+          "pos": "助動詞,*,*,*,助動詞-タ,終止形-一般",
+          "reading": "ダ",
+          "normalized_form": "た",
+          "dictionary_form": "だ"
+        },
+        {
+          "surface": "。",
+          "pos": "補助記号,句点,*,*,*,*",
+          "reading": "。",
+          "normalized_form": "。",
+          "dictionary_form": "。"
+        }
+      ],
+      "morph_count": 36
+    },
+    {
+      "sentence": "大抵は十三四人｜漬ってるがたまには誰も居ない事がある。",
+      "mode": "B",
+      "morphemes": [
+        {
+          "surface": "大抵",
+          "pos": "副詞,*,*,*,*,*",
+          "reading": "タイテイ",
+          "normalized_form": "大抵",
+          "dictionary_form": "大抵"
+        },
+        {
+          "surface": "は",
+          "pos": "助詞,係助詞,*,*,*,*",
+          "reading": "ハ",
+          "normalized_form": "は",
+          "dictionary_form": "は"
+        },
+        {
+          "surface": "十",
+          "pos": "名詞,数詞,*,*,*,*",
+          "reading": "ジュウ",
+          "normalized_form": "十",
+          "dictionary_form": "十"
+        },
+        {
+          "surface": "三",
+          "pos": "名詞,数詞,*,*,*,*",
+          "reading": "サン",
+          "normalized_form": "三",
+          "dictionary_form": "三"
+        },
+        {
+          "surface": "四",
+          "pos": "名詞,数詞,*,*,*,*",
+          "reading": "ヨン",
+          "normalized_form": "四",
+          "dictionary_form": "四"
+        },
+        {
+          "surface": "人",
+          "pos": "接尾辞,名詞的,一般,*,*,*",
+          "reading": "ニン",
+          "normalized_form": "人",
+          "dictionary_form": "人"
+        },
+        {
+          "surface": "｜",
+          "pos": "補助記号,一般,*,*,*,*",
+          "reading": "キゴウ",
+          "normalized_form": "|",
+          "dictionary_form": "|"
+        },
+        {
+          "surface": "漬",
+          "pos": "接尾辞,名詞的,一般,*,*,*",
+          "reading": "ツケ",
+          "normalized_form": "漬け",
+          "dictionary_form": "漬"
+        },
+        {
+          "surface": "って",
+          "pos": "助詞,副助詞,*,*,*,*",
+          "reading": "ッテ",
+          "normalized_form": "って",
+          "dictionary_form": "って"
+        },
+        {
+          "surface": "る",
+          "pos": "助動詞,*,*,*,文語下二段-ラ行,終止形-一般",
+          "reading": "ル",
+          "normalized_form": "れる",
+          "dictionary_form": "る"
+        },
+        {
+          "surface": "が",
+          "pos": "助詞,接続助詞,*,*,*,*",
+          "reading": "ガ",
+          "normalized_form": "が",
+          "dictionary_form": "が"
+        },
+        {
+          "surface": "たまに",
+          "pos": "副詞,*,*,*,*,*",
+          "reading": "タマニ",
+          "normalized_form": "偶に",
+          "dictionary_form": "たまに"
+        },
+        {
+          "surface": "は",
+          "pos": "助詞,係助詞,*,*,*,*",
+          "reading": "ハ",
+          "normalized_form": "は",
+          "dictionary_form": "は"
+        },
+        {
+          "surface": "誰",
+          "pos": "代名詞,*,*,*,*,*",
+          "reading": "ダレ",
+          "normalized_form": "誰",
+          "dictionary_form": "誰"
+        },
+        {
+          "surface": "も",
+          "pos": "助詞,係助詞,*,*,*,*",
+          "reading": "モ",
+          "normalized_form": "も",
+          "dictionary_form": "も"
+        },
+        {
+          "surface": "居",
+          "pos": "動詞,非自立可能,*,*,上一段-ア行,未然形-一般",
+          "reading": "イ",
+          "normalized_form": "居る",
+          "dictionary_form": "居る"
+        },
+        {
+          "surface": "ない",
+          "pos": "助動詞,*,*,*,助動詞-ナイ,連体形-一般",
+          "reading": "ナイ",
+          "normalized_form": "ない",
+          "dictionary_form": "ない"
+        },
+        {
+          "surface": "事",
+          "pos": "名詞,普通名詞,一般,*,*,*",
+          "reading": "コト",
+          "normalized_form": "事",
+          "dictionary_form": "事"
+        },
+        {
+          "surface": "が",
+          "pos": "助詞,格助詞,*,*,*,*",
+          "reading": "ガ",
+          "normalized_form": "が",
+          "dictionary_form": "が"
+        },
+        {
+          "surface": "ある",
+          "pos": "動詞,非自立可能,*,*,五段-ラ行,終止形-一般",
+          "reading": "アル",
+          "normalized_form": "有る",
+          "dictionary_form": "ある"
+        },
+        {
+          "surface": "。",
+          "pos": "補助記号,句点,*,*,*,*",
+          "reading": "。",
+          "normalized_form": "。",
+          "dictionary_form": "。"
+        }
+      ],
+      "morph_count": 21
+    }
+  ],
+  "total_sentences": 11,
+  "generated_at": "auto-generated"
+}
