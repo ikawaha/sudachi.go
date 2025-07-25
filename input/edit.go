@@ -117,8 +117,11 @@ func addReplace(
 	// The first char of replacing string will correspond with whole replaced string
 	// (matching Rust comment exactly)
 	*targetMapping = append(*targetMapping, sourceMapping[what.Start]) // matching Rust: target_mapping.push(source_mapping[what.start])
-	pos := sourceMapping[what.End]                                     // matching Rust: let pos = source_mapping[what.end]
-	for i := 1; i < len(with); i++ {                                   // matching Rust: for _ in 1..with.len()
+
+	// All remaining bytes of the replacement string map to the end position
+	// (matching Rust exactly: let pos = source_mapping[what.end]; for _ in 1..with.len() { target_mapping.push(pos); })
+	pos := sourceMapping[what.End]   // matching Rust: let pos = source_mapping[what.end]
+	for i := 1; i < len(with); i++ { // matching Rust: for _ in 1..with.len()
 		*targetMapping = append(*targetMapping, pos) // matching Rust: target_mapping.push(pos)
 	}
 

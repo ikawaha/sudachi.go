@@ -45,6 +45,7 @@ func (p *InputBufferPool) Put(buffer *InputBuffer) {
 
 // ResetForPool clears all fields of an InputBuffer for reuse in pool
 func (ib *InputBuffer) ResetForPool() {
+	ib.trueOriginal = ""
 	ib.original = ""
 	ib.modified = ""
 	ib.normalizationInfo = nil

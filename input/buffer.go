@@ -34,6 +34,8 @@ const (
 
 // InputBuffer represents input text with normalization and mapping information
 type InputBuffer struct {
+	// True original input data (never modified) - used for OrigSlice output
+	trueOriginal string
 	// Original input data, output is done on this
 	original string
 	// Normalized input data, analysis is done on this (byte-based indexing)
@@ -80,6 +82,7 @@ func (ib *InputBuffer) StartBuild(original string) error {
 		return fmt.Errorf("invalid buffer state: buffer must be in clean state to start build")
 	}
 
+	ib.trueOriginal = original // Preserve the true original text
 	ib.original = original
 	ib.modified = original // Start with original text
 
@@ -409,11 +412,11 @@ func (ib *InputBuffer) GetOriginalText(beginChar, endChar int) string {
 	}
 
 	// Validate range in original text
-	if origBeginByte >= len(ib.original) || origEndByte > len(ib.original) || origBeginByte >= origEndByte {
+	if origBeginByte >= len(ib.trueOriginal) || origEndByte > len(ib.trueOriginal) || origBeginByte >= origEndByte {
 		return ""
 	}
 
-	return ib.original[origBeginByte:origEndByte]
+	return ib.trueOriginal[origBeginByte:origEndByte]
 }
 
 // Range represents a byte range with start and end positions
@@ -438,9 +441,20 @@ func (ib *InputBuffer) ToOrig(modifiedRange Range) Range {
 }
 
 // OrigSlice extracts a substring from original text using modified text byte range
-// This matches Rust implementation: InputTextIndex.orig_slice()
+// This matches Rust implementation: InputTextIndex.orig_slice() with UTF-8 validation
 func (ib *InputBuffer) OrigSlice(modifiedRange Range) string {
 	if ib.state == StateClean {
+		return ""
+	}
+
+	// UTF-8 character boundary validation (matching Rust debug_assert!)
+	modified := ib.Modified()
+	if modifiedRange.Start < 0 || modifiedRange.End > len(modified) || modifiedRange.Start > modifiedRange.End {
+		return ""
+	}
+
+	// Check UTF-8 character boundaries (matching Rust is_char_boundary checks)
+	if !IsCharBoundary(modified, modifiedRange.Start) || !IsCharBoundary(modified, modifiedRange.End) {
 		return ""
 	}
 
@@ -448,12 +462,28 @@ func (ib *InputBuffer) OrigSlice(modifiedRange Range) string {
 	origRange := ib.ToOrig(modifiedRange)
 
 	// Match Rust: simple bounds check but allow empty ranges
-	if origRange.Start < 0 || origRange.End > len(ib.original) || origRange.Start > origRange.End {
+	if origRange.Start < 0 || origRange.End > len(ib.trueOriginal) || origRange.Start > origRange.End {
 		return ""
 	}
 
-	// Extract from original text
-	return ib.original[origRange.Start:origRange.End]
+	// Extract from true original text (never modified)
+	result := ib.trueOriginal[origRange.Start:origRange.End]
+
+	return result
+}
+
+// IsCharBoundary checks if the byte position is at a UTF-8 character boundary
+// This matches Rust's str.is_char_boundary() method
+func IsCharBoundary(s string, pos int) bool {
+	if pos == 0 || pos == len(s) {
+		return true
+	}
+	if pos < 0 || pos > len(s) {
+		return false
+	}
+	// Check if this byte position is at the start of a UTF-8 character
+	// UTF-8 continuation bytes have the pattern 10xxxxxx (0x80-0xBF)
+	return (s[pos] & 0xC0) != 0x80
 }
 
 // WithEditor executes a function that can modify the buffer contents with proper mapping tracking
@@ -508,6 +538,7 @@ func (ib *InputBuffer) commitEdits(edits []ReplaceOp) error {
 
 // Reset resets the buffer to clean state
 func (ib *InputBuffer) Reset() {
+	ib.trueOriginal = ""
 	ib.original = ""
 	ib.modified = ""
 	ib.m2o = ib.m2o[:0]

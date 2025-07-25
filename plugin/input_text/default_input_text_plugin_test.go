@@ -116,11 +116,11 @@ func TestDefaultInputTextPluginNormalization(t *testing.T) {
 		input    string
 		expected string
 	}{
-		// Roman numerals should be preserved (ignore normalize)
+		// Roman numerals: uppercase -> lowercase conversion, lowercase preserved
 		{
-			name:     "Roman numerals preservation",
+			name:     "Roman numerals case conversion",
 			input:    "ⅠⅡⅢⅣⅤⅵⅶⅷⅸⅹ",
-			expected: "ⅠⅡⅢⅣⅤⅵⅶⅷⅸⅹ",
+			expected: "ⅰⅱⅲⅳⅴⅵⅶⅷⅸⅹ",
 		},
 		// Half-width katakana with dakuten should be converted
 		{
@@ -311,9 +311,9 @@ func TestPluginIgnoreNormalizeChars(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "Preserved Roman numeral",
+			name:     "Roman numeral case conversion",
 			input:    "Ⅰ",
-			expected: "Ⅰ",
+			expected: "ⅰ",
 		},
 		{
 			name:     "Preserved Kangxi radical",
@@ -323,7 +323,7 @@ func TestPluginIgnoreNormalizeChars(t *testing.T) {
 		{
 			name:     "Mixed with normal chars",
 			input:    "testⅠ⺀TEST",
-			expected: "testⅠ⺀test", // TEST should be lowercased but Ⅰ⺀ preserved
+			expected: "testⅰ⺀test", // TEST and Ⅰ should be lowercased, ⺀ preserved
 		},
 	}
 

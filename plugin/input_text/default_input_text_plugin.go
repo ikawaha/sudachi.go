@@ -134,13 +134,21 @@ func (p *DefaultInputTextPlugin) RewriteImpl(input string) (string, bool) {
 
 // hasUppercase checks if input contains uppercase characters
 // This matches Rust's chars.iter().any(|c| c.is_uppercase())
+// Note: Roman numerals are not detected by unicode.IsUpper, so we check them explicitly
 func (p *DefaultInputTextPlugin) hasUppercase(input string) bool {
 	for _, r := range input {
-		if unicode.IsUpper(r) {
+		if unicode.IsUpper(r) || p.isUpperRomanNumeral(r) {
 			return true
 		}
 	}
 	return false
+}
+
+// isUpperRomanNumeral checks if a character is an uppercase roman numeral
+// that should be converted to lowercase before NFKC normalization
+func (p *DefaultInputTextPlugin) isUpperRomanNumeral(ch rune) bool {
+	// Unicode range for uppercase roman numerals (U+2160-U+216F)
+	return ch >= 'Ⅰ' && ch <= 'Ⅿ'
 }
 
 // replaceFast implements fast path normalization (matches Rust replace_fast)
@@ -191,7 +199,8 @@ func (p *DefaultInputTextPlugin) replaceSlow(input string) (string, bool) {
 		}
 
 		// 2. Handle normalization for individual character (matching Rust logic)
-		needLowercase := unicode.IsUpper(ch)
+		// Note: Roman numerals are not detected by unicode.IsUpper, so we check them explicitly
+		needLowercase := unicode.IsUpper(ch) || p.isUpperRomanNumeral(ch)
 		needNFKC := !p.shouldIgnore(ch) && !norm.NFKC.IsNormalString(string(ch))
 
 		// Match Rust's (need_lowercase, need_nfkc) pattern matching
@@ -247,10 +256,75 @@ func (p *DefaultInputTextPlugin) Rewrite(buffer *input.InputBuffer) error {
 		return fmt.Errorf("buffer is read-only")
 	}
 
-	normalized, changed := p.RewriteImpl(current)
+	// Apply character-by-character normalization with proper mapping tracking
+	return buffer.WithEditor(func(buf *input.InputBuffer, editor *input.InputEditor) error {
+		return p.applyNormalizationWithEditor(current, editor)
+	})
+}
 
-	if changed {
-		return buffer.SetModified(normalized)
+// applyNormalizationWithEditor applies normalization character-by-character using editor
+// This ensures proper m2o mapping is maintained
+func (p *DefaultInputTextPlugin) applyNormalizationWithEditor(text string, editor *input.InputEditor) error {
+	// Check what types of normalization are needed (matching original RewriteImpl logic)
+	needNFKC := !norm.NFKC.IsNormalString(text)
+	needLowercase := p.hasUppercase(text)
+
+	if !needNFKC && !needLowercase && (p.stringReplacer == nil || !p.stringReplacer.HasReplacements()) {
+		// No normalization needed
+		return nil
+	}
+
+	// Process text character by character to identify individual changes
+	runes := []rune(text)
+	bytePos := 0
+
+	for _, ch := range runes {
+		charStr := string(ch)
+		charBytes := []byte(charStr)
+		charStart := bytePos
+		charEnd := bytePos + len(charBytes)
+
+		// Check if this character needs replacement
+		var replacement string
+		needsChange := false
+
+		// 1. First check direct character replacement map
+		if replaced, found := p.replaceCharMap[charStr]; found {
+			replacement = replaced
+			needsChange = true
+		}
+
+		// 2. If no direct replacement, check string replacer for multi-character patterns
+		if !needsChange && p.stringReplacer != nil {
+			replaced := p.stringReplacer.Replace(charStr)
+			if replaced != charStr {
+				replacement = replaced
+				needsChange = true
+			}
+		}
+
+		// 3. Apply case folding if needed (includes Roman numerals)
+		if !needsChange && needLowercase && (unicode.IsUpper(ch) || p.isUpperRomanNumeral(ch)) {
+			lowered := unicode.ToLower(ch)
+			replacement = string(lowered)
+			needsChange = true
+		}
+
+		// 5. Apply NFKC normalization if needed and not in ignore set
+		if !needsChange && needNFKC && !p.ignoreNormalizeSet[ch] {
+			normalized := norm.NFKC.String(charStr)
+			if normalized != charStr {
+				replacement = normalized
+				needsChange = true
+			}
+		}
+
+		// Apply replacement if needed
+		if needsChange {
+			editor.ReplaceRange(input.Range{Start: charStart, End: charEnd}, replacement)
+		}
+
+		bytePos = charEnd
 	}
 
 	return nil
