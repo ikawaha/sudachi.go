@@ -12,6 +12,7 @@ import (
 	"github.com/ikawaha/sudachi.go/config"
 	"github.com/ikawaha/sudachi.go/dic"
 	"github.com/ikawaha/sudachi.go/lattice"
+	"github.com/ikawaha/sudachi.go/sentence"
 )
 
 // SentenceSplitMode represents how to handle sentence splitting (matching Rust)
@@ -186,6 +187,7 @@ func (s *splitSentencesOnly) analyze(input string, writer *bufio.Writer) error {
 type analyzeSplitted struct {
 	output    outputFormatter
 	tokenizer *analysis.Tokenizer
+	splitter  *sentence.SentenceSplitter
 	mode      analysis.Mode
 	debug     bool
 }
@@ -214,9 +216,14 @@ func newAnalyzeSplitted(output outputFormatter, dict *dic.SystemDictionary, cfg 
 		}
 		tokenizer.SetMode(mode)
 		tokenizer.SetDebugMode(debug)
+
+		// Create sentence splitter with checker (fallback case)
+		splitter := sentence.NewSentenceSplitter().WithChecker(dict.LexiconSet())
+
 		return &analyzeSplitted{
 			output:    output,
 			tokenizer: tokenizer,
+			splitter:  splitter,
 			mode:      mode,
 			debug:     debug,
 		}, nil
@@ -233,26 +240,57 @@ func newAnalyzeSplitted(output outputFormatter, dict *dic.SystemDictionary, cfg 
 	// Set debug mode
 	tokenizer.SetDebugMode(debug)
 
+	// Create sentence splitter with checker (matching Rust AnalyzeSplitted::new)
+	splitter := sentence.NewSentenceSplitter().WithChecker(dict.LexiconSet())
+
 	return &analyzeSplitted{
 		output:    output,
 		tokenizer: tokenizer,
+		splitter:  splitter,
 		mode:      mode,
 		debug:     debug,
 	}, nil
 }
 
 func (a *analyzeSplitted) analyze(input string, writer *bufio.Writer) error {
-	// For now, assume no sentence splitting - tokenize as-is
-	morphemes, err := a.tokenizer.Tokenize(input)
-	if err != nil {
-		return fmt.Errorf("tokenization failed: %w", err)
+	// Split sentences and analyze each one (matching Rust AnalyzeSplitted::analyze exactly)
+	iter := a.splitter.Split(input)
+	for {
+		sent, hasMore := iter.Next()
+		if !hasMore {
+			break
+		}
+
+		// Skip empty sentences
+		sent = strings.TrimSpace(sent)
+		if len(sent) == 0 {
+			continue
+		}
+
+		// Debug: print what sentence we're processing
+		if a.debug {
+			fmt.Fprintf(os.Stderr, "Processing sentence: '%s'\n", sent)
+		}
+
+		// Analyze this sentence (matching Rust inner.analyze(sent, writer))
+		morphemes, err := a.tokenizer.Tokenize(sent)
+		if err != nil {
+			return fmt.Errorf("tokenization failed: %w", err)
+		}
+
+		// Convert MorphemeList to slice of NodeResult
+		results := make([]*lattice.NodeResult, morphemes.Size())
+		for i := 0; i < morphemes.Size(); i++ {
+			results[i] = morphemes.Get(i)
+		}
+
+		// Write results for this sentence (including EOS marker)
+		err = a.output.write(writer, results)
+		if err != nil {
+			return err
+		}
 	}
-	// Convert MorphemeList to slice of NodeResult
-	results := make([]*lattice.NodeResult, morphemes.Size())
-	for i := 0; i < morphemes.Size(); i++ {
-		results[i] = morphemes.Get(i)
-	}
-	return a.output.write(writer, results)
+	return nil
 }
 
 // AnalyzeNonSplitted analyzer implementation (matching Rust AnalyzeNonSplitted)
