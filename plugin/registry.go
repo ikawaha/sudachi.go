@@ -22,13 +22,13 @@ const (
 // PluginFactory creates plugins based on configuration
 type PluginFactory interface {
 	// CreateInputTextPlugin creates an input text plugin
-	CreateInputTextPlugin(settings map[string]any, resourceDir string, grammar *dic.Grammar) (InputTextPlugin, error)
+	CreateInputTextPlugin(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (InputTextPlugin, error)
 
 	// CreateOOVProvider creates an OOV provider plugin
-	CreateOOVProvider(settings map[string]any, resourceDir string, grammar *dic.Grammar) (OOVProviderPlugin, error)
+	CreateOOVProvider(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (OOVProviderPlugin, error)
 
 	// CreatePathRewriter creates a path rewrite plugin
-	CreatePathRewriter(settings map[string]any, resourceDir string, grammar *dic.Grammar) (PathRewritePlugin, error)
+	CreatePathRewriter(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (PathRewritePlugin, error)
 
 	// GetSupportedTypes returns the types of plugins this factory can create
 	GetSupportedTypes() []PluginType
@@ -55,7 +55,7 @@ func (r *Registry) Register(className string, factory PluginFactory) {
 }
 
 // CreatePlugin creates a plugin instance based on class name and type
-func (r *Registry) CreatePlugin(className string, pluginType PluginType, settings map[string]any, resourceDir string, grammar *dic.Grammar) (any, error) {
+func (r *Registry) CreatePlugin(className string, pluginType PluginType, settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (any, error) {
 	r.mu.RLock()
 	factory, exists := r.factories[className]
 	r.mu.RUnlock()
@@ -80,11 +80,11 @@ func (r *Registry) CreatePlugin(className string, pluginType PluginType, setting
 
 	switch pluginType {
 	case PluginTypeInputText:
-		return factory.CreateInputTextPlugin(settings, resourceDir, grammar)
+		return factory.CreateInputTextPlugin(settings, resourceDir, systemDict)
 	case PluginTypeOOVProvider:
-		return factory.CreateOOVProvider(settings, resourceDir, grammar)
+		return factory.CreateOOVProvider(settings, resourceDir, systemDict)
 	case PluginTypePathRewrite:
-		return factory.CreatePathRewriter(settings, resourceDir, grammar)
+		return factory.CreatePathRewriter(settings, resourceDir, systemDict)
 	default:
 		return nil, fmt.Errorf("unsupported plugin type: %s", pluginType)
 	}
@@ -119,13 +119,13 @@ func Register(className string, factory PluginFactory) {
 }
 
 // CreatePlugin creates a plugin using the global registry
-func CreatePlugin(className string, pluginType PluginType, settings map[string]any, resourceDir string, grammar *dic.Grammar) (any, error) {
-	return globalRegistry.CreatePlugin(className, pluginType, settings, resourceDir, grammar)
+func CreatePlugin(className string, pluginType PluginType, settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (any, error) {
+	return globalRegistry.CreatePlugin(className, pluginType, settings, resourceDir, systemDict)
 }
 
 // CreatePluginFromSettings creates a plugin from settings (automatically extracts class name)
-func CreatePluginFromSettings(pluginType PluginType, settings map[string]any, resourceDir string, grammar *dic.Grammar) (any, error) {
-	return globalRegistry.CreatePluginFromSettings(pluginType, settings, resourceDir, grammar)
+func CreatePluginFromSettings(pluginType PluginType, settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (any, error) {
+	return globalRegistry.CreatePluginFromSettings(pluginType, settings, resourceDir, systemDict)
 }
 
 // GetRegisteredClasses returns all registered plugin classes from the global registry
@@ -139,12 +139,12 @@ func IsRegistered(className string) bool {
 }
 
 // CreatePluginFromSettings creates a plugin instance from settings (automatically extracts class name)
-func (r *Registry) CreatePluginFromSettings(pluginType PluginType, settings map[string]any, resourceDir string, grammar *dic.Grammar) (any, error) {
+func (r *Registry) CreatePluginFromSettings(pluginType PluginType, settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (any, error) {
 	// Extract class name from settings
 	className, ok := settings["class"].(string)
 	if !ok {
 		return nil, fmt.Errorf("missing or invalid class field in plugin settings")
 	}
 
-	return r.CreatePlugin(className, pluginType, settings, resourceDir, grammar)
+	return r.CreatePlugin(className, pluginType, settings, resourceDir, systemDict)
 }

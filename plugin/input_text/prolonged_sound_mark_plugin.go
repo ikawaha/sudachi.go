@@ -178,11 +178,11 @@ func (p *ProlongedSoundMarkPlugin) RewriteImpl(input string) (string, bool) {
 }
 
 // CreateInputTextPlugin creates a ProlongedSoundMarkPlugin instance
-func (p *ProlongedSoundMarkPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.InputTextPlugin, error) {
+func (p *ProlongedSoundMarkPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.InputTextPlugin, error) {
 	prolongedPlugin := NewProlongedSoundMarkPlugin()
 
 	// Set up the plugin with configuration
-	err := prolongedPlugin.SetUp(settings, resourceDir, grammar)
+	err := prolongedPlugin.SetUp(settings, resourceDir, systemDict.Grammar())
 	if err != nil {
 		return nil, fmt.Errorf("failed to set up ProlongedSoundMark plugin: %w", err)
 	}
@@ -191,12 +191,12 @@ func (p *ProlongedSoundMarkPlugin) CreateInputTextPlugin(settings map[string]any
 }
 
 // CreateOOVProvider creates an OOV provider plugin (not supported by ProlongedSoundMark plugin)
-func (p *ProlongedSoundMarkPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.OOVProviderPlugin, error) {
+func (p *ProlongedSoundMarkPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.OOVProviderPlugin, error) {
 	return nil, fmt.Errorf("ProlongedSoundMark plugin does not support OOV provider plugins")
 }
 
 // CreatePathRewriter creates a path rewrite plugin (not supported by ProlongedSoundMark plugin)
-func (p *ProlongedSoundMarkPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.PathRewritePlugin, error) {
+func (p *ProlongedSoundMarkPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.PathRewritePlugin, error) {
 	return nil, fmt.Errorf("ProlongedSoundMark plugin does not support path rewrite plugins")
 }
 

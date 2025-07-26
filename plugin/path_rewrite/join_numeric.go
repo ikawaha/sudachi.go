@@ -446,6 +446,7 @@ func (p *JoinNumericPlugin) rewriteGen(results []*lattice.NodeResult, buffer *in
 		if ctypes.IsNumeric || ctypes.IsKanjiNumeric ||
 			(commaAsDigit && s == ",") ||
 			(periodAsDigit && s == ".") {
+
 			if beginIdx < 0 {
 				parser.Clear()
 				beginIdx = i
@@ -554,20 +555,17 @@ func (p *JoinNumericPlugin) concat(path []*lattice.NodeResult, begin, end int, p
 		return path, nil
 	}
 
-	// Check POS ID (matching Rust logic: if word_info.pos_id() != self.numeric_pos_id { return Ok(path); })
-	if p.numericPosId != 0 && p.lexiconSet != nil {
-		// Get the POS ID from the first node's WordInfo, matching Rust's word_info.pos_id()
-		firstNode := path[begin]
-		if !firstNode.Node().IsOOV() {
-			if wordInfo, err := p.lexiconSet.GetWordInfo(firstNode.Node().WordId()); err == nil {
-				// Rust logic: if word_info.pos_id() != self.numeric_pos_id { return Ok(path); }
-				if wordInfo.PosId != p.numericPosId {
-					return path, nil
-				}
+	// Critical fix: Check POS ID first like Rust version
+	// Rust logic: if word_info.pos_id() != self.numeric_pos_id { return Ok(path); }
+	firstNode := path[begin]
+
+	if p.numericPosId != 0 && p.lexiconSet != nil && !firstNode.Node().IsOOV() {
+		if wordInfo, err := p.lexiconSet.GetWordInfo(firstNode.Node().WordId()); err == nil {
+			// If the dictionary word doesn't have numeric POS, skip processing entirely
+			if wordInfo.PosId != p.numericPosId {
+				return path, nil
 			}
 		}
-		// For OOV nodes, we cannot get reliable POS ID, so proceed with processing
-		// This matches Rust behavior where OOV nodes are handled differently
 	}
 
 	if p.enableNormalize {
@@ -575,10 +573,11 @@ func (p *JoinNumericPlugin) concat(path []*lattice.NodeResult, begin, end int, p
 		originalNormalizedForm := path[begin].NormalizedForm()
 
 		// Rust behavior: concatenate if multiple nodes OR if normalized form differs from original
+		// This is the key fix: only normalize if the result is actually different
 		if end-begin > 1 || normalizedForm != originalNormalizedForm {
 			return p.concatNodes(path, begin, end, &normalizedForm)
 		}
-		// If single character and normalized form is same as original, don't change
+		// If single node and normalized form is same as original, don't change (matching Rust logic)
 		return path, nil
 	}
 
@@ -706,24 +705,27 @@ func (p *JoinNumericPlugin) concatNodes(path []*lattice.NodeResult, begin, end i
 }
 
 // CreateInputTextPlugin creates an input text plugin (not supported by JoinNumeric plugin)
-func (p *JoinNumericPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.InputTextPlugin, error) {
+func (p *JoinNumericPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.InputTextPlugin, error) {
 	return nil, fmt.Errorf("JoinNumeric plugin does not support input text plugins")
 }
 
 // CreateOOVProvider creates an OOV provider plugin (not supported by JoinNumeric plugin)
-func (p *JoinNumericPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.OOVProviderPlugin, error) {
+func (p *JoinNumericPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.OOVProviderPlugin, error) {
 	return nil, fmt.Errorf("JoinNumeric plugin does not support OOV provider plugins")
 }
 
 // CreatePathRewriter creates a JoinNumeric path rewrite plugin instance
-func (p *JoinNumericPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.PathRewritePlugin, error) {
+func (p *JoinNumericPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.PathRewritePlugin, error) {
 	joinNumericPlugin := NewJoinNumericPlugin()
 
-	// Set up the plugin with configuration
-	err := joinNumericPlugin.SetUp(settings, resourceDir, grammar)
+	// Set up the plugin with configuration and set LexiconSet from SystemDictionary
+	err := joinNumericPlugin.SetUp(settings, resourceDir, systemDict.Grammar())
 	if err != nil {
 		return nil, fmt.Errorf("failed to set up JoinNumeric plugin: %w", err)
 	}
+
+	// Set LexiconSet from SystemDictionary to enable POS checking
+	joinNumericPlugin.SetLexiconSet(systemDict.LexiconSet())
 
 	return joinNumericPlugin, nil
 }

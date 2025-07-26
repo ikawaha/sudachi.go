@@ -354,19 +354,19 @@ func (p *MeCabOovPlugin) insertNode(lat *lattice.Lattice, node *lattice.Node) er
 }
 
 // CreateInputTextPlugin creates an input text plugin (not supported by MeCab OOV plugin)
-func (p *MeCabOovPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.InputTextPlugin, error) {
+func (p *MeCabOovPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.InputTextPlugin, error) {
 	return nil, fmt.Errorf("MeCab OOV plugin does not support input text plugins")
 }
 
 // CreateOOVProvider creates a MeCab OOV provider plugin instance
-func (p *MeCabOovPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.OOVProviderPlugin, error) {
-	mecabPlugin, err := NewMeCabOovPluginFromResourceDir(resourceDir, grammar)
+func (p *MeCabOovPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.OOVProviderPlugin, error) {
+	mecabPlugin, err := NewMeCabOovPluginFromResourceDir(resourceDir, systemDict.Grammar())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create MeCab OOV plugin: %w", err)
 	}
 
 	// Set up the plugin with configuration
-	err = mecabPlugin.SetUp(settings, resourceDir, grammar)
+	err = mecabPlugin.SetUp(settings, resourceDir, systemDict.Grammar())
 	if err != nil {
 		return nil, fmt.Errorf("failed to set up MeCab OOV plugin: %w", err)
 	}
@@ -375,7 +375,7 @@ func (p *MeCabOovPlugin) CreateOOVProvider(settings map[string]any, resourceDir 
 }
 
 // CreatePathRewriter creates a path rewrite plugin (not supported by MeCab OOV plugin)
-func (p *MeCabOovPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.PathRewritePlugin, error) {
+func (p *MeCabOovPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.PathRewritePlugin, error) {
 	return nil, fmt.Errorf("MeCab OOV plugin does not support path rewrite plugins")
 }
 

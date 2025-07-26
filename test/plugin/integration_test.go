@@ -1,8 +1,10 @@
 package plugin
 
 import (
+	"log"
 	"testing"
 
+	"github.com/ikawaha/sudachi.go/dic"
 	"github.com/ikawaha/sudachi.go/plugin"
 
 	// Import plugin packages to trigger auto-registration
@@ -83,9 +85,15 @@ func TestPluginCreation(t *testing.T) {
 		},
 	}
 
+	loader := dic.NewDictionaryLoader()
+	dict, err := loader.LoadSystemDictionary("../../resources/system.dic")
+	if err != nil {
+		log.Fatalf("Failed to load dictionary: %v", err)
+	}
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			pluginInstance, err := plugin.CreatePlugin(tc.className, tc.pluginType, tc.settings, "", nil)
+			pluginInstance, err := plugin.CreatePlugin(tc.className, tc.pluginType, tc.settings, "", dict)
 			if err != nil {
 				t.Fatalf("Failed to create plugin %s: %v", tc.className, err)
 			}
@@ -129,13 +137,19 @@ func TestPluginFactoryTypes(t *testing.T) {
 		},
 	}
 
+	loader := dic.NewDictionaryLoader()
+	dict, err := loader.LoadSystemDictionary("../../resources/system.dic")
+	if err != nil {
+		log.Fatalf("Failed to load dictionary: %v", err)
+	}
+
 	for _, tc := range testCases {
 		t.Run(tc.className, func(t *testing.T) {
 			// Try to create different types of plugins
 			settings := map[string]any{"class": tc.className}
 
 			for _, pluginType := range []plugin.PluginType{plugin.PluginTypeInputText, plugin.PluginTypeOOVProvider, plugin.PluginTypePathRewrite} {
-				_, err := plugin.CreatePlugin(tc.className, pluginType, settings, "", nil)
+				_, err := plugin.CreatePlugin(tc.className, pluginType, settings, "", dict)
 
 				shouldSucceed := false
 				for _, expectedType := range tc.expectedTypes {

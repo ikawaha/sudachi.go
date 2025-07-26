@@ -13,15 +13,15 @@ type MockPluginFactory struct {
 	supportedTypes []PluginType
 }
 
-func (f *MockPluginFactory) CreateInputTextPlugin(settings map[string]any, resourceDir string, grammar *dic.Grammar) (InputTextPlugin, error) {
+func (f *MockPluginFactory) CreateInputTextPlugin(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (InputTextPlugin, error) {
 	return &MockInputTextPlugin{}, nil
 }
 
-func (f *MockPluginFactory) CreateOOVProvider(settings map[string]any, resourceDir string, grammar *dic.Grammar) (OOVProviderPlugin, error) {
+func (f *MockPluginFactory) CreateOOVProvider(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (OOVProviderPlugin, error) {
 	return &MockOOVProviderPlugin{}, nil
 }
 
-func (f *MockPluginFactory) CreatePathRewriter(settings map[string]any, resourceDir string, grammar *dic.Grammar) (PathRewritePlugin, error) {
+func (f *MockPluginFactory) CreatePathRewriter(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (PathRewritePlugin, error) {
 	return &MockPathRewritePlugin{}, nil
 }
 

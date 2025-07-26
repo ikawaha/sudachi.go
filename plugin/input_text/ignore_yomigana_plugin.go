@@ -360,11 +360,11 @@ func (p *IgnoreYomiganaPlugin) isHiraganaOrKatakana(r rune) bool {
 }
 
 // CreateInputTextPlugin creates an IgnoreYomiganaPlugin instance
-func (p *IgnoreYomiganaPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.InputTextPlugin, error) {
+func (p *IgnoreYomiganaPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.InputTextPlugin, error) {
 	yomiganaPlugin := NewIgnoreYomiganaPlugin()
 
 	// Set up the plugin with configuration
-	err := yomiganaPlugin.SetUp(settings, resourceDir, grammar)
+	err := yomiganaPlugin.SetUp(settings, resourceDir, systemDict.Grammar())
 	if err != nil {
 		return nil, fmt.Errorf("failed to set up IgnoreYomigana plugin: %w", err)
 	}
@@ -373,12 +373,12 @@ func (p *IgnoreYomiganaPlugin) CreateInputTextPlugin(settings map[string]any, re
 }
 
 // CreateOOVProvider creates an OOV provider plugin (not supported by IgnoreYomigana plugin)
-func (p *IgnoreYomiganaPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.OOVProviderPlugin, error) {
+func (p *IgnoreYomiganaPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.OOVProviderPlugin, error) {
 	return nil, fmt.Errorf("IgnoreYomigana plugin does not support OOV provider plugins")
 }
 
 // CreatePathRewriter creates a path rewrite plugin (not supported by IgnoreYomigana plugin)
-func (p *IgnoreYomiganaPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.PathRewritePlugin, error) {
+func (p *IgnoreYomiganaPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.PathRewritePlugin, error) {
 	return nil, fmt.Errorf("IgnoreYomigana plugin does not support path rewrite plugins")
 }
 

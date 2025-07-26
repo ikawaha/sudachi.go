@@ -129,7 +129,7 @@ func (tb *TokenizerBuilder) configureOOVProvider(tokenizer *Tokenizer) error {
 	// Process all OOV provider plugins in order (matching Rust behavior)
 	for _, pluginMap := range tb.config.OovProviderPlugins {
 		// Create plugin using the registry system
-		pluginInterface, err := plugin.CreatePluginFromSettings(plugin.PluginTypeOOVProvider, pluginMap, tb.resourceDir, tb.systemDict.Grammar())
+		pluginInterface, err := plugin.CreatePluginFromSettings(plugin.PluginTypeOOVProvider, pluginMap, tb.resourceDir, tb.systemDict)
 		if err != nil {
 			return fmt.Errorf("failed to create OOV provider plugin: %w", err)
 		}
@@ -151,7 +151,7 @@ func (tb *TokenizerBuilder) configureOOVProvider(tokenizer *Tokenizer) error {
 func (tb *TokenizerBuilder) configurePathRewritePlugins(tokenizer *Tokenizer) error {
 	for _, pluginMap := range tb.config.PathRewritePlugins {
 		// Create plugin using the registry system
-		pluginInterface, err := plugin.CreatePluginFromSettings(plugin.PluginTypePathRewrite, pluginMap, tb.resourceDir, tb.systemDict.Grammar())
+		pluginInterface, err := plugin.CreatePluginFromSettings(plugin.PluginTypePathRewrite, pluginMap, tb.resourceDir, tb.systemDict)
 		if err != nil {
 			return fmt.Errorf("failed to create path rewrite plugin: %w", err)
 		}
@@ -173,7 +173,7 @@ func (tb *TokenizerBuilder) configurePathRewritePlugins(tokenizer *Tokenizer) er
 func (tb *TokenizerBuilder) configureInputTextPlugins(tokenizer *Tokenizer) error {
 	for _, pluginMap := range tb.config.InputTextPlugins {
 		// Create plugin using the registry system
-		pluginInterface, err := plugin.CreatePluginFromSettings(plugin.PluginTypeInputText, pluginMap, tb.resourceDir, tb.systemDict.Grammar())
+		pluginInterface, err := plugin.CreatePluginFromSettings(plugin.PluginTypeInputText, pluginMap, tb.resourceDir, tb.systemDict)
 		if err != nil {
 			return fmt.Errorf("failed to create input text plugin: %w", err)
 		}

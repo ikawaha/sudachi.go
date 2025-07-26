@@ -207,21 +207,21 @@ func (p *JoinKatakanaOovPlugin) concatenateNodes(nodes []*lattice.NodeResult) (*
 }
 
 // CreateInputTextPlugin creates an input text plugin (not supported by JoinKatakanaOov plugin)
-func (p *JoinKatakanaOovPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.InputTextPlugin, error) {
+func (p *JoinKatakanaOovPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.InputTextPlugin, error) {
 	return nil, fmt.Errorf("JoinKatakanaOov plugin does not support input text plugins")
 }
 
 // CreateOOVProvider creates an OOV provider plugin (not supported by JoinKatakanaOov plugin)
-func (p *JoinKatakanaOovPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.OOVProviderPlugin, error) {
+func (p *JoinKatakanaOovPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.OOVProviderPlugin, error) {
 	return nil, fmt.Errorf("JoinKatakanaOov plugin does not support OOV provider plugins")
 }
 
 // CreatePathRewriter creates a JoinKatakanaOov path rewrite plugin instance
-func (p *JoinKatakanaOovPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.PathRewritePlugin, error) {
+func (p *JoinKatakanaOovPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.PathRewritePlugin, error) {
 	joinKatakanaPlugin := NewJoinKatakanaOovPlugin()
 
 	// Set up the plugin with configuration
-	err := joinKatakanaPlugin.SetUp(settings, resourceDir, grammar)
+	err := joinKatakanaPlugin.SetUp(settings, resourceDir, systemDict.Grammar())
 	if err != nil {
 		return nil, fmt.Errorf("failed to set up JoinKatakanaOov plugin: %w", err)
 	}

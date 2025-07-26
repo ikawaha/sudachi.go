@@ -170,26 +170,26 @@ func (p *SimpleOovPlugin) insertNode(lat *lattice.Lattice, node *lattice.Node) e
 }
 
 // CreateInputTextPlugin creates an input text plugin (not supported by Simple OOV plugin)
-func (p *SimpleOovPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.InputTextPlugin, error) {
-	return nil, fmt.Errorf("Simple OOV p does not support input text plugins")
+func (p *SimpleOovPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.InputTextPlugin, error) {
+	return nil, fmt.Errorf("Simple OOV plugin does not support input text plugins")
 }
 
 // CreateOOVProvider creates a Simple OOV provider plugin instance
-func (p *SimpleOovPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.OOVProviderPlugin, error) {
+func (p *SimpleOovPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.OOVProviderPlugin, error) {
 	simplePlugin := NewSimpleOovPlugin()
 
-	// Set up the p with configuration
-	err := simplePlugin.SetUp(settings, resourceDir, grammar)
+	// Set up the plugin with configuration
+	err := simplePlugin.SetUp(settings, resourceDir, systemDict.Grammar())
 	if err != nil {
-		return nil, fmt.Errorf("failed to set up Simple OOV p: %w", err)
+		return nil, fmt.Errorf("failed to set up Simple OOV plugin: %w", err)
 	}
 
 	return simplePlugin, nil
 }
 
 // CreatePathRewriter creates a path rewrite plugin (not supported by Simple OOV plugin)
-func (p *SimpleOovPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.PathRewritePlugin, error) {
-	return nil, fmt.Errorf("Simple OOV p does not support path rewrite plugins")
+func (p *SimpleOovPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.PathRewritePlugin, error) {
+	return nil, fmt.Errorf("Simple OOV plugin does not support path rewrite plugins")
 }
 
 // GetSupportedTypes returns the plugin types this factory supports

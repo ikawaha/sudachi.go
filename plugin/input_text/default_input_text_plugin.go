@@ -360,11 +360,11 @@ func (p *DefaultInputTextPlugin) CreateNormalizedInputBuffer(original string, gr
 }
 
 // CreateInputTextPlugin creates a DefaultInputTextPlugin instance
-func (p *DefaultInputTextPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.InputTextPlugin, error) {
+func (p *DefaultInputTextPlugin) CreateInputTextPlugin(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.InputTextPlugin, error) {
 	defaultPlugin := NewDefaultInputTextPlugin()
 
 	// Set up the plugin with configuration
-	err := defaultPlugin.SetUp(settings, resourceDir, grammar)
+	err := defaultPlugin.SetUp(settings, resourceDir, systemDict.Grammar())
 	if err != nil {
 		return nil, fmt.Errorf("failed to set up DefaultInputText plugin: %w", err)
 	}
@@ -373,12 +373,12 @@ func (p *DefaultInputTextPlugin) CreateInputTextPlugin(settings map[string]any, 
 }
 
 // CreateOOVProvider creates an OOV provider plugin (not supported by DefaultInputText plugin)
-func (p *DefaultInputTextPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.OOVProviderPlugin, error) {
+func (p *DefaultInputTextPlugin) CreateOOVProvider(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.OOVProviderPlugin, error) {
 	return nil, fmt.Errorf("DefaultInputText plugin does not support OOV provider plugins")
 }
 
 // CreatePathRewriter creates a path rewrite plugin (not supported by DefaultInputText plugin)
-func (p *DefaultInputTextPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, grammar *dic.Grammar) (plugin.PathRewritePlugin, error) {
+func (p *DefaultInputTextPlugin) CreatePathRewriter(settings map[string]any, resourceDir string, systemDict *dic.SystemDictionary) (plugin.PathRewritePlugin, error) {
 	return nil, fmt.Errorf("DefaultInputText plugin does not support path rewrite plugins")
 }
 
