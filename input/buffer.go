@@ -315,6 +315,20 @@ func (ib *InputBuffer) GetCategory(charIdx int) (dic.CategoryType, error) {
 	return ib.modCat[charIdx], nil
 }
 
+// CategoryOfRange returns the common categories across a character range
+// Equivalent to Rust's cat_of_range function
+func (ib *InputBuffer) CategoryOfRange(start, end int) dic.CategoryType {
+	if start >= end || start < 0 || end > len(ib.modCat) {
+		return dic.CategoryType(0) // equivalent to CategoryType::empty() - bits: 0
+	}
+
+	result := dic.CategoryAll // Start with all categories (like CategoryType::all())
+	for i := start; i < end; i++ {
+		result &= ib.modCat[i] // AND operation
+	}
+	return result
+}
+
 // GetCategoryContinuity returns the category continuity at the given character index
 func (ib *InputBuffer) GetCategoryContinuity(charIdx int) (int, error) {
 	if charIdx < 0 || charIdx >= len(ib.modCatContinuity) {

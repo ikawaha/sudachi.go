@@ -486,7 +486,11 @@ func (p *JoinNumericPlugin) rewriteGen(results []*lattice.NodeResult, buffer *in
 
 		// Process numeric sequence end
 		if beginIdx >= 0 {
-			if parser.Done() {
+			// Call parser.Done() only once to avoid side effects
+			isDone := parser.Done()
+
+			if isDone {
+
 				var err error
 				results, err = p.concat(results, int(beginIdx), int(i), parser)
 				if err != nil {
@@ -523,7 +527,12 @@ func (p *JoinNumericPlugin) rewriteGen(results []*lattice.NodeResult, buffer *in
 	// Process final numeric sequence
 	if beginIdx >= 0 {
 		length := len(results)
-		if parser.Done() {
+
+		// Call parser.Done() only once to avoid side effects
+		isDone := parser.Done()
+
+		if isDone {
+
 			var err error
 			results, err = p.concat(results, int(beginIdx), length, parser)
 			if err != nil {
@@ -570,14 +579,26 @@ func (p *JoinNumericPlugin) concat(path []*lattice.NodeResult, begin, end int, p
 
 	if p.enableNormalize {
 		normalizedForm := parser.GetNormalized()
-		originalNormalizedForm := path[begin].NormalizedForm()
 
-		// Rust behavior: concatenate if multiple nodes OR if normalized form differs from original
-		// This is the key fix: only normalize if the result is actually different
-		if end-begin > 1 || normalizedForm != originalNormalizedForm {
+		// Get dictionary normalized form like Rust version: word_info.normalized_form()
+		var dictionaryNormalizedForm string
+		if p.lexiconSet != nil && !firstNode.Node().IsOOV() {
+			if wordInfo, err := p.lexiconSet.GetWordInfo(firstNode.Node().WordId()); err == nil {
+				dictionaryNormalizedForm = wordInfo.NormalizedForm
+			} else {
+				// Fallback to NodeResult normalized form if dictionary access fails
+				dictionaryNormalizedForm = path[begin].NormalizedForm()
+			}
+		} else {
+			// Fallback to NodeResult normalized form if no lexicon access
+			dictionaryNormalizedForm = path[begin].NormalizedForm()
+		}
+
+		// Rust behavior: concatenate if multiple nodes OR if normalized form differs from dictionary
+		if end-begin > 1 || normalizedForm != dictionaryNormalizedForm {
 			return p.concatNodes(path, begin, end, &normalizedForm)
 		}
-		// If single node and normalized form is same as original, don't change (matching Rust logic)
+		// If single node and normalized form is same as dictionary, don't change (matching Rust logic)
 		return path, nil
 	}
 
@@ -597,25 +618,12 @@ func (p *JoinNumericPlugin) getCategoryTypes(node *lattice.NodeResult, buffer *i
 	nodeStart := int(node.Node().Begin())
 	nodeEnd := int(node.Node().End())
 
-	// Check character categories for the node's range
-	for charPos := nodeStart; charPos < nodeEnd; charPos++ {
-		if charPos >= buffer.CharCount() {
-			break
-		}
+	// Use CategoryOfRange to get common categories across the range (matching Rust cat_of_range)
+	categories := buffer.CategoryOfRange(nodeStart, nodeEnd)
 
-		category, err := buffer.GetCategory(charPos)
-		if err != nil {
-			continue
-		}
-
-		// Match Rust logic: CategoryType::NUMERIC | CategoryType::KANJINUMERIC
-		if category.IsNumeric() {
-			result.IsNumeric = true
-		}
-		if category.IsKanjiNumeric() {
-			result.IsKanjiNumeric = true
-		}
-	}
+	// Check if the common categories include numeric types (matching Rust intersects logic)
+	result.IsNumeric = categories.IsNumeric()
+	result.IsKanjiNumeric = categories.IsKanjiNumeric()
 
 	return result
 }
