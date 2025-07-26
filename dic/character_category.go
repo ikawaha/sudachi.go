@@ -59,6 +59,16 @@ func (c CategoryType) IsKanjiNumeric() bool {
 	return c.HasFlag(CategoryKanjiNumeric)
 }
 
+// IsKatakana checks if the category is katakana
+func (c CategoryType) IsKatakana() bool {
+	return c.HasFlag(CategoryKatakana)
+}
+
+// IsNoOOVBOW checks if the category has NOOOVBOW flag
+func (c CategoryType) IsNoOOVBOW() bool {
+	return c.HasFlag(CategoryNoOOVBOW)
+}
+
 // String returns the string representation of CategoryType
 func (c CategoryType) String() string {
 	// Handle empty category (0) as UNKNOWN, matching Rust behavior

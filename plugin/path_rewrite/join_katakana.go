@@ -3,7 +3,6 @@ package path_rewrite
 import (
 	"fmt"
 	"strings"
-	"unicode"
 
 	"github.com/ikawaha/sudachi.go/dic"
 	"github.com/ikawaha/sudachi.go/input"
@@ -11,25 +10,25 @@ import (
 	"github.com/ikawaha/sudachi.go/plugin"
 )
 
-// JoinKatakanaOovPlugin concatenates consecutive katakana OOV nodes
+// JoinKatakanaOovPlugin concatenates consecutive katakana OOV nodes (matching Rust version)
 type JoinKatakanaOovPlugin struct {
-	minLength int
-	oovPOS    []string
+	oovPosId  uint16 // The pos_id used for concatenated node (matching Rust)
+	minLength int    // The minimum node char_length to concatenate even if it is not oov (matching Rust)
 }
 
 // NewJoinKatakanaOovPlugin creates a new JoinKatakanaOovPlugin
 func NewJoinKatakanaOovPlugin() *JoinKatakanaOovPlugin {
 	return &JoinKatakanaOovPlugin{
-		minLength: 3,                                           // Default value
-		oovPOS:    []string{"名詞", "普通名詞", "一般", "*", "*", "*"}, // Default POS
+		oovPosId:  0, // Will be set during setup (matching Rust)
+		minLength: 3, // Default value (matching Rust)
 	}
 }
 
 // NewJoinKatakanaOovPluginWithParams creates a new JoinKatakanaOovPlugin with specified parameters (deprecated)
 func NewJoinKatakanaOovPluginWithParams(minLength int, oovPOS []string) *JoinKatakanaOovPlugin {
 	return &JoinKatakanaOovPlugin{
+		oovPosId:  0, // Will be set during setup
 		minLength: minLength,
-		oovPOS:    oovPOS,
 	}
 }
 
@@ -38,16 +37,11 @@ func (p *JoinKatakanaOovPlugin) GetName() string {
 	return "JoinKatakanaOovPlugin"
 }
 
-// SetUp initializes the plugin with configuration (implements plugin.PathRewritePlugin)
+// SetUp initializes the plugin with configuration (matching Rust implementation)
 func (p *JoinKatakanaOovPlugin) SetUp(settings map[string]any, resourceDir string, grammar *dic.Grammar) error {
-	// Configure minimum length from settings if provided
+	// Extract oovPOS and minLength from settings like Rust version
 	if settings != nil {
-		if minLen, ok := settings["minLength"].(float64); ok {
-			p.minLength = int(minLen)
-		} else if minLen, ok := settings["minLength"].(int); ok {
-			p.minLength = minLen
-		}
-		// Handle oovPOS as []any from JSON settings
+		// Handle oovPOS as []any from JSON settings and convert to POS ID
 		if posInterface, ok := settings["oovPOS"].([]any); ok {
 			oovPOS := make([]string, len(posInterface))
 			for i, v := range posInterface {
@@ -55,13 +49,30 @@ func (p *JoinKatakanaOovPlugin) SetUp(settings map[string]any, resourceDir strin
 					oovPOS[i] = s
 				}
 			}
-			p.oovPOS = oovPOS
+			// Get POS ID from grammar like Rust: grammar.get_part_of_speech_id()
+			if grammar != nil {
+				if posId := grammar.GetPartOfSpeechId(oovPOS); posId != nil {
+					p.oovPosId = *posId
+				}
+			}
 		} else if pos, ok := settings["oovPOS"].([]string); ok {
-			p.oovPOS = pos
+			// Get POS ID from grammar like Rust: grammar.get_part_of_speech_id()
+			if grammar != nil {
+				if posId := grammar.GetPartOfSpeechId(pos); posId != nil {
+					p.oovPosId = *posId
+				}
+			}
+		}
+
+		// Configure minimum length from settings if provided
+		if minLen, ok := settings["minLength"].(float64); ok {
+			p.minLength = int(minLen)
+		} else if minLen, ok := settings["minLength"].(int); ok {
+			p.minLength = minLen
 		}
 	}
 
-	// Set default values if not configured
+	// Set default values if not configured (matching Rust defaults)
 	if p.minLength <= 0 {
 		p.minLength = 3 // Default minimum length for katakana OOV joining
 	}
@@ -69,86 +80,132 @@ func (p *JoinKatakanaOovPlugin) SetUp(settings map[string]any, resourceDir strin
 	return nil
 }
 
-// Rewrite implements PathRewritePlugin interface
+// Rewrite implements PathRewritePlugin interface (matching Rust rewrite_gen algorithm)
 func (p *JoinKatakanaOovPlugin) Rewrite(path []*lattice.NodeResult, buffer *input.InputBuffer, lat *lattice.Lattice) ([]*lattice.NodeResult, error) {
 	if len(path) <= 1 {
 		return path, nil
 	}
 
-	result := make([]*lattice.NodeResult, 0, len(path))
+	// Use Rust-compatible rewrite_gen algorithm
+	return p.rewriteGen(path, buffer)
+}
+
+// rewriteGen implements the exact Rust rewrite_gen algorithm
+func (p *JoinKatakanaOovPlugin) rewriteGen(path []*lattice.NodeResult, buffer *input.InputBuffer) ([]*lattice.NodeResult, error) {
 	i := 0
-
 	for i < len(path) {
-		current := path[i]
+		node := path[i]
 
-		// Check if current node is katakana OOV
-		if !p.isKatakanaOOV(current, buffer) {
-			result = append(result, current)
+		// Rust logic: if !(node.is_oov() || self.is_shorter(node)) || !self.is_katakana_node(text, node)
+		isOOV := node.Node().IsOOV()
+		isShorter := p.isShorter(node)
+		isKatakana := p.isKatakanaNode(node, buffer)
+
+		if !(isOOV || isShorter) || !isKatakana {
 			i++
 			continue
 		}
 
-		// Find consecutive katakana OOV nodes
-		start := i
-		for i < len(path) && p.isKatakanaOOV(path[i], buffer) {
-			i++
+		// Find backward range of katakana nodes
+		begin := i - 1
+		for begin >= 0 && p.isKatakanaNode(path[begin], buffer) {
+			begin--
 		}
-		end := i
-
-		// Calculate total length
-		totalLength := 0
-		for j := start; j < end; j++ {
-			surface := path[j].Surface()
-			totalLength += len([]rune(surface))
+		begin++ // adjust to first katakana node
+		if begin < 0 {
+			begin = 0
 		}
 
-		// Only join if we have multiple nodes or meet minimum length requirement
-		if end-start > 1 && totalLength >= p.minLength {
-			// Concatenate katakana nodes
-			concatenated, err := p.concatenateNodes(path[start:end])
+		// Find forward range of katakana nodes
+		end := i + 1
+		for end < len(path) && p.isKatakanaNode(path[end], buffer) {
+			end++
+		}
+
+		// Adjust begin to ensure we can start OOV
+		for begin < end && !p.canOOVBowNode(path[begin], buffer) {
+			begin++
+		}
+
+		// Only concatenate if we have multiple nodes
+		if (end - begin) > 1 {
+			var err error
+			path, err = p.concatOOVNodes(path, begin, end)
 			if err != nil {
-				// If concatenation fails, add nodes individually
-				for j := start; j < end; j++ {
-					result = append(result, path[j])
-				}
-			} else {
-				result = append(result, concatenated)
+				return nil, err
 			}
-		} else {
-			// Add nodes individually if they don't meet criteria
-			for j := start; j < end; j++ {
-				result = append(result, path[j])
-			}
+			// Skip next node as we know it's not joinable katakana
+			i = begin + 1
 		}
+		i++
 	}
+
+	return path, nil
+}
+
+// isKatakanaNode checks if a node contains katakana characters (matching Rust version)
+func (p *JoinKatakanaOovPlugin) isKatakanaNode(node *lattice.NodeResult, buffer *input.InputBuffer) bool {
+	// Rust: text.cat_of_range(node.begin()..node.end()).contains(CategoryType::KATAKANA)
+	nodeStart := int(node.Node().Begin())
+	nodeEnd := int(node.Node().End())
+
+	// Get category types for the node range (equivalent to cat_of_range)
+	categories := buffer.CategoryOfRange(nodeStart, nodeEnd)
+
+	// Check if the categories include katakana (equivalent to contains(CategoryType::KATAKANA))
+	return categories.HasFlag(dic.CategoryKatakana)
+}
+
+// isShorter checks if node is shorter than minimum length (matching Rust version)
+func (p *JoinKatakanaOovPlugin) isShorter(node *lattice.NodeResult) bool {
+	surface := node.Surface()
+	runeCount := len([]rune(surface))
+	return runeCount < p.minLength
+}
+
+// canOOVBowNode checks if a node can start OOV (matching Rust version)
+func (p *JoinKatakanaOovPlugin) canOOVBowNode(node *lattice.NodeResult, buffer *input.InputBuffer) bool {
+	// Rust: !text.cat_at_char(node.begin()).contains(CategoryType::NOOOVBOW)
+	nodeStart := int(node.Node().Begin())
+
+	// Convert byte position to character position
+	charIdx, err := buffer.ByteToCharIndex(nodeStart)
+	if err != nil {
+		return false
+	}
+
+	// Get category at character position (equivalent to cat_at_char)
+	category, err := buffer.GetCategory(charIdx)
+	if err != nil {
+		return false
+	}
+
+	// Check if the category does NOT contain NOOOVBOW
+	return !category.HasFlag(dic.CategoryNoOOVBOW)
+}
+
+// concatOOVNodes concatenates nodes like Rust concat_oov_nodes
+func (p *JoinKatakanaOovPlugin) concatOOVNodes(path []*lattice.NodeResult, begin, end int) ([]*lattice.NodeResult, error) {
+	if begin >= end {
+		return path, nil
+	}
+
+	// Concatenate the nodes in the range
+	concatenated, err := p.concatenateNodes(path[begin:end])
+	if err != nil {
+		return path, err
+	}
+
+	// Replace the range with the concatenated node (matching Rust's path.drain)
+	result := make([]*lattice.NodeResult, 0, len(path)-(end-begin)+1)
+	result = append(result, path[:begin]...)
+	result = append(result, concatenated)
+	result = append(result, path[end:]...)
 
 	return result, nil
 }
 
-// isKatakanaOOV checks if a node is a katakana OOV node
-func (p *JoinKatakanaOovPlugin) isKatakanaOOV(node *lattice.NodeResult, buffer *input.InputBuffer) bool {
-	// Check if node is OOV
-	if !node.Node().IsOOV() {
-		return false
-	}
-
-	// Check if surface is katakana
-	surface := node.Surface()
-	if surface == "" {
-		return false
-	}
-
-	// All characters must be katakana
-	for _, r := range surface {
-		if !unicode.In(r, unicode.Katakana) {
-			return false
-		}
-	}
-
-	return true
-}
-
-// concatenateNodes concatenates multiple katakana nodes into one
+// concatenateNodes concatenates multiple katakana nodes into one (matching Rust concat_oov_nodes exactly)
 func (p *JoinKatakanaOovPlugin) concatenateNodes(nodes []*lattice.NodeResult) (*lattice.NodeResult, error) {
 	if len(nodes) == 0 {
 		return nil, nil
@@ -158,49 +215,39 @@ func (p *JoinKatakanaOovPlugin) concatenateNodes(nodes []*lattice.NodeResult) (*
 		return nodes[0], nil
 	}
 
-	// Build concatenated surface, reading, and dictionary forms
+	// Build concatenated surface (matching Rust implementation exactly)
 	var surfaceBuilder strings.Builder
-	var readingBuilder strings.Builder
-	var dictionaryBuilder strings.Builder
+	for _, node := range nodes {
+		surfaceBuilder.WriteString(node.Surface())
+	}
+	surface := surfaceBuilder.String()
 
 	firstNode := nodes[0]
 	lastNode := nodes[len(nodes)-1]
 
-	for _, node := range nodes {
-		surfaceBuilder.WriteString(node.Surface())
-		readingBuilder.WriteString(node.Reading())
-		dictionaryBuilder.WriteString(node.DictionaryForm())
-	}
-
-	surface := surfaceBuilder.String()
-	reading := readingBuilder.String()
-	dictionary := dictionaryBuilder.String()
-
-	// Create new node with the span of all concatenated nodes
+	// Create new node with the span of all concatenated nodes (matching Rust Node::new)
 	newNode := lattice.NewNode(
 		firstNode.Node().Begin(),
 		lastNode.Node().End(),
-		65535,       // u16::MAX for left_id
-		65535,       // u16::MAX for right_id
-		32767,       // i16::MAX for cost
-		dic.Invalid, // WordId::INVALID for OOV
+		65535,       // u16::MAX for left_id (matching Rust)
+		65535,       // u16::MAX for right_id (matching Rust)
+		32767,       // i16::MAX for cost (matching Rust)
+		dic.Invalid, // WordId::INVALID for OOV (matching Rust)
 	)
 
-	// Use provided OOV POS or default katakana POS
-	pos := p.oovPOS
-	if len(pos) == 0 {
-		pos = []string{"名詞", "普通名詞", "一般", "*", "*", "*"}
-	}
+	// Use default katakana POS (matching Rust behavior)
+	pos := []string{"名詞", "普通名詞", "一般", "*", "*", "*"}
 
-	// Create concatenated result
+	// Create concatenated result (matching Rust concat_oov_nodes exactly)
+	// Rust version: normalized_form = surface, dictionary_form = surface, reading_form = ""
 	concatenated := lattice.NewNodeResult(
 		newNode,
-		surface,
-		pos,
-		[]string{}, // No additional features
-		surface,    // Normalized form is same as surface for katakana
-		dictionary,
-		reading,
+		surface,    // Surface
+		pos,        // POS components
+		[]string{}, // No additional features (matching Rust)
+		surface,    // Normalized form = surface (matching Rust concat_oov_nodes)
+		surface,    // Dictionary form = surface (matching Rust concat_oov_nodes)
+		"",         // Reading form = empty (matching Rust concat_oov_nodes default)
 	)
 
 	return concatenated, nil
