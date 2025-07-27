@@ -16,7 +16,7 @@ type StringNumber struct {
 	significand string // The digits as a string
 	scale       int    // Power of 10 multiplier (number of trailing zeros)
 	point       int    // Decimal point position (-1 if none)
-	isAllZero   bool   // Tracks if all digits processed so far are zero
+	isAllZero   bool   // Tracks if all digits processed so far are zero (matching Rust is_all_zero)
 }
 
 // NewStringNumber creates a new StringNumber initialized to empty (matching Rust)
@@ -126,6 +126,15 @@ func (sn *StringNumber) fillZero(length int) {
 	}
 }
 
+// setPoint implements Rust set_point method
+func (sn *StringNumber) setPoint() bool {
+	if sn.scale == 0 && sn.point < 0 {
+		sn.point = len(sn.significand)
+		return true
+	}
+	return false
+}
+
 // ToString implements Rust StringNumber.to_string() method exactly
 func (sn *StringNumber) ToString() string {
 	if sn.isZero() {
@@ -230,7 +239,7 @@ func (p *NumericParser) Clear() {
 func (p *NumericParser) Append(c rune) bool {
 	// Handle comma and period first (like Rust)
 	if c == ',' {
-		if p.hasComma || p.digitLength != 3 {
+		if !p.checkComma() {
 			p.errorState = ErrorComma
 			return false
 		}
@@ -245,7 +254,20 @@ func (p *NumericParser) Append(c rune) bool {
 			return false
 		}
 		p.hasHangingPoint = true
-		p.total.point = len(p.total.significand)
+		// Rust version: check conditions before calling set_point()
+		if p.isFirstDigit {
+			p.errorState = ErrorPoint
+			return false
+		}
+		if p.hasComma && !p.checkComma() {
+			p.errorState = ErrorComma
+			return false
+		}
+		if !p.tmp.setPoint() {
+			p.errorState = ErrorPoint
+			return false
+		}
+		p.hasComma = false
 		return true
 	}
 
@@ -299,6 +321,17 @@ func (p *NumericParser) isSmallUnit(n int) bool {
 // isLargeUnit checks if value is a large unit (万, 億, 兆, etc.)
 func (p *NumericParser) isLargeUnit(n int) bool {
 	return n < -3
+}
+
+// checkComma implements Rust check_comma method
+func (p *NumericParser) checkComma() bool {
+	if p.isFirstDigit {
+		return false
+	}
+	if !p.hasComma {
+		return p.digitLength <= 3 && !p.tmp.isZero() && !p.tmp.isAllZero
+	}
+	return p.digitLength == 3
 }
 
 // Done returns whether parsing is complete and successful (matching Rust implementation)
@@ -580,22 +613,24 @@ func (p *JoinNumericPlugin) concat(path []*lattice.NodeResult, begin, end int, p
 	if p.enableNormalize {
 		normalizedForm := parser.GetNormalized()
 
-		// Get dictionary normalized form like Rust version: word_info.normalized_form()
-		var dictionaryNormalizedForm string
+		// Get first node's dictionary normalized form (matching Rust word_info.normalized_form())
+		var firstNodeDictNormalized string
+		firstNode := path[begin]
+
 		if p.lexiconSet != nil && !firstNode.Node().IsOOV() {
-			if wordInfo, err := p.lexiconSet.GetWordInfo(firstNode.Node().WordId()); err == nil {
-				dictionaryNormalizedForm = wordInfo.NormalizedForm
+			if wordInfo, err := p.lexiconSet.GetWordInfo(firstNode.Node().WordId()); err == nil && wordInfo.NormalizedForm != "" {
+				firstNodeDictNormalized = wordInfo.NormalizedForm
 			} else {
 				// Fallback to NodeResult normalized form if dictionary access fails
-				dictionaryNormalizedForm = path[begin].NormalizedForm()
+				firstNodeDictNormalized = firstNode.NormalizedForm()
 			}
 		} else {
 			// Fallback to NodeResult normalized form if no lexicon access
-			dictionaryNormalizedForm = path[begin].NormalizedForm()
+			firstNodeDictNormalized = firstNode.NormalizedForm()
 		}
 
-		// Rust behavior: concatenate if multiple nodes OR if normalized form differs from dictionary
-		if end-begin > 1 || normalizedForm != dictionaryNormalizedForm {
+		// Rust logic exactly: if end - begin > 1 || normalized_form != word_info.normalized_form()
+		if end-begin > 1 || normalizedForm != firstNodeDictNormalized {
 			return p.concatNodes(path, begin, end, &normalizedForm)
 		}
 		// If single node and normalized form is same as dictionary, don't change (matching Rust logic)
@@ -670,14 +705,20 @@ func (p *JoinNumericPlugin) concatNodes(path []*lattice.NodeResult, begin, end i
 	concatenatedReading := readingBuilder.String()
 	concatenatedDictionary := dictionaryBuilder.String()
 
-	// Handle normalized form (matching Rust logic)
+	// Handle normalized form (matching Rust logic exactly)
 	var finalNormalizedForm string
 	if normalizedForm != nil {
 		// Use provided normalized form when normalization is enabled
 		finalNormalizedForm = *normalizedForm
 	} else {
-		// Default to surface form when no normalization provided
-		finalNormalizedForm = concatenatedSurface
+		// Rust behavior: concatenate each node's normalized form (matching concat_nodes unwrap_or_else logic)
+		var normalizedBuilder strings.Builder
+		for i := begin; i < end; i++ {
+			node := path[i]
+			// Get normalized form from each node
+			normalizedBuilder.WriteString(node.NormalizedForm())
+		}
+		finalNormalizedForm = normalizedBuilder.String()
 	}
 
 	// Create new node (matching Rust's Node::new parameters)
