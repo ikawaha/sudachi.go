@@ -124,6 +124,10 @@ func (sd *SentenceDetector) GetEOS(input string, checker *NonBreakChecker) (int,
 
 	// Find sentence boundaries (2-stage approach matching Rust implementation)
 	matches := sentenceBreaker.FindAllStringIndex(s, -1)
+
+	// Track processed positions to avoid duplicate boundaries from consecutive punctuation
+	processedPositions := make(map[int]bool)
+
 	for _, match := range matches {
 		matchText := s[match[0]:match[1]]
 
@@ -135,8 +139,15 @@ func (sd *SentenceDetector) GetEOS(input string, checker *NonBreakChecker) (int,
 			}
 		}
 
-		// Check if we can split at the match
+		// Extend match to include consecutive punctuation marks (matching Rust [periods dot]* behavior)
 		eos := match[1] // match.end() in Rust
+		eos = extendThroughConsecutivePunctuation(s, eos)
+
+		// Skip if we've already processed a boundary that includes this position
+		if processedPositions[eos] {
+			continue
+		}
+		processedPositions[eos] = true
 
 		// Check parenthesis level (matching Rust parenthesis_level check)
 		if parenthesisLevel(s[:eos]) > 0 {
@@ -238,4 +249,49 @@ func isValidPeriodBoundary(text string, pos int) bool {
 	}
 
 	return true
+}
+
+// extendThroughConsecutivePunctuation extends the position through consecutive punctuation marks
+// This matches Rust's [periods dot]* behavior in the sentence breaker regex
+func extendThroughConsecutivePunctuation(s string, pos int) int {
+	runes := []rune(s)
+	runePos := len([]rune(s[:pos]))
+
+	// Extend through any consecutive periods, dots, or punctuation marks
+	for runePos < len(runes) {
+		r := runes[runePos]
+		// Check if the character is in periods, dot, or other sentence-ending punctuation
+		if isPunctuationChar(r) {
+			runePos++
+		} else {
+			break
+		}
+	}
+
+	// Convert back to byte position
+	if runePos >= len(runes) {
+		return len(s)
+	}
+	return len([]byte(string(runes[:runePos])))
+}
+
+// isPunctuationChar checks if a rune is a sentence-ending punctuation character
+// Matching Rust's periods and dot patterns
+func isPunctuationChar(r rune) bool {
+	// periods: "。？！♪…\\?\\!"
+	periodsChars := "。？！♪…?!"
+	// dot: "\\.．"
+	dotChars := ".．"
+
+	for _, p := range periodsChars {
+		if r == p {
+			return true
+		}
+	}
+	for _, d := range dotChars {
+		if r == d {
+			return true
+		}
+	}
+	return false
 }
