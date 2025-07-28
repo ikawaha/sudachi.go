@@ -60,8 +60,9 @@ func NewTokenizer(systemDict *dic.SystemDictionary) (*Tokenizer, error) {
 		lattice:        lattice.New(),
 		normalizer:     norm,
 		pluginManager:  NewPluginManager(),
-		useSimpleOov:   true,           // Default to simple OOV
-		simpleOovPosId: simpleOovPosId, // Dynamic POS ID resolution
+		useSimpleOov:   true,                                   // Default to simple OOV
+		simpleOovPosId: simpleOovPosId,                         // Dynamic POS ID resolution
+		charCategory:   systemDict.Grammar().CharacterCategory, // For character categorization
 		mode:           ModeA,
 	}, nil
 }
@@ -130,6 +131,7 @@ func (t *Tokenizer) buildLattice() error {
 				return fmt.Errorf("failed to apply OOV provider plugins: %w", err)
 			}
 		}
+
 		if createdWords.IsEmpty() {
 			return fmt.Errorf("no words created at position %d", charPos)
 		}
@@ -165,7 +167,8 @@ func (t *Tokenizer) lookupInLexiconSet(lexiconSet *dic.LexiconSet, modifiedBytes
 		return createdWords, err
 	}
 
-	// Lexicon set lookup started
+	// Count entries for debug
+	entryCount := 0
 
 	// Process all matching entries
 	current := createdWords
@@ -177,6 +180,8 @@ func (t *Tokenizer) lookupInLexiconSet(lexiconSet *dic.LexiconSet, modifiedBytes
 		if entry == nil {
 			break
 		}
+
+		entryCount++
 
 		// Convert byte end position to character position
 		endBytePos := byteOffset + entry.End
@@ -659,8 +664,14 @@ func (t *Tokenizer) getReadingForm(node *lattice.Node) (string, error) {
 
 	// Check if this is an OOV node
 	if wordId.IsOOV() {
-		// For OOV nodes, use the surface form as reading form
-		return t.getSurfaceForm(node)
+		// For OOV nodes, use the surface form as reading form (matches Rust behavior)
+		// Rust version: For OOV words, the surface form is typically used as reading
+		surfaceForm, err := t.getSurfaceForm(node)
+		if err != nil {
+			return "", err
+		}
+		// Return the surface form as reading (this matches Rust OOV behavior)
+		return surfaceForm, nil
 	}
 
 	// Use LexiconSet for word info lookup (Rust compatible)
@@ -1059,5 +1070,6 @@ func createDefaultNormalizer() (*input.Normalizer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create default Sudachi normalizer: %w", err)
 	}
+
 	return normalizer, nil
 }

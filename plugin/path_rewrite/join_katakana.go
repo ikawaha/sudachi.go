@@ -233,7 +233,7 @@ func (p *JoinKatakanaOovPlugin) concatenateNodes(nodes []*lattice.NodeResult) (*
 			maxWordId = nodeWordId
 		}
 	}
-	
+
 	// If the max WordId is not OOV, create special WordId (matching Rust logic)
 	// However, to avoid dictionary lookup issues in Go, we'll use OOV WordId
 	// The behavior should be the same since these nodes carry their own word info

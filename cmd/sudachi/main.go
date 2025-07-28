@@ -304,7 +304,13 @@ type analyzeNonSplitted struct {
 func newAnalyzeNonSplitted(output outputFormatter, dict *dic.SystemDictionary, cfg *config.Config, mode analysis.Mode, debug bool) (analyzer, error) {
 	// Create tokenizer using TokenizerBuilder with config (matching Rust JapaneseDictionary::from_cfg)
 	builder := analysis.NewTokenizerBuilder(dict)
+
+	// Use default resource directory (same as regression tests)
+	resourceDir := "resources"
+
+	// Set both config and resource directory for plugin loading
 	builder.SetConfig(cfg)
+	builder.SetResourceDir(resourceDir)
 
 	// Set debug mode on the builder before building
 	builder.SetDebug(debug)

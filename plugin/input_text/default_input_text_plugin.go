@@ -310,7 +310,7 @@ func (p *DefaultInputTextPlugin) applyNormalizationWithEditor(text string, edito
 			needsChange = true
 		}
 
-		// 5. Apply NFKC normalization if needed and not in ignore set
+		// 4. Apply NFKC normalization if needed and not in ignore set
 		if !needsChange && needNFKC && !p.ignoreNormalizeSet[ch] {
 			normalized := norm.NFKC.String(charStr)
 			if normalized != charStr {
