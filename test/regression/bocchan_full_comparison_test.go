@@ -120,9 +120,16 @@ func runBocchanComparisonForMode(t *testing.T, tokenizer *analysis.Tokenizer, se
 
 		// Get expected golden lines for this sentence
 		goldenLines := getGoldenLinesForSentence(goldenData, i)
+		
+		// Parse golden lines before comparison
+		goldenMorphemes, err := parseGoldenLines(goldenLines)
+		if err != nil {
+			t.Errorf("Failed to parse golden data for sentence %d: %v", i+1, err)
+			continue
+		}
 
-		// Compare results
-		isMatch, differences := compareWithGoldenData(goMorphemes, goldenLines)
+		// Compare results using already parsed golden morphemes
+		isMatch, differences := compareWithParsedGoldenData(goMorphemes, goldenMorphemes)
 
 		result := BocchanComparisonResult{
 			SentenceIndex: i + 1,
@@ -207,9 +214,10 @@ func getGoldenLinesForSentence(goldenData []string, sentenceIndex int) []string 
 	inSentence := false
 
 	for _, line := range goldenData {
-		line = strings.TrimSpace(line)
+		// Don't trim space as it removes leading tabs from empty surface lines
+		trimmedLine := strings.TrimSpace(line)
 
-		if line == "EOS" {
+		if trimmedLine == "EOS" {
 			if inSentence {
 				if currentSentence == sentenceIndex {
 					return sentenceLines
@@ -221,7 +229,7 @@ func getGoldenLinesForSentence(goldenData []string, sentenceIndex int) []string 
 			continue
 		}
 
-		if line == "" {
+		if trimmedLine == "" {
 			continue
 		}
 
@@ -231,6 +239,7 @@ func getGoldenLinesForSentence(goldenData []string, sentenceIndex int) []string 
 		}
 
 		if currentSentence == sentenceIndex {
+			// Use original line (preserving leading tabs) instead of trimmed line
 			sentenceLines = append(sentenceLines, line)
 		}
 	}
@@ -243,15 +252,48 @@ func getGoldenLinesForSentence(goldenData []string, sentenceIndex int) []string 
 	return nil
 }
 
-func compareWithGoldenData(goMorphemes []ExpectedMorpheme, goldenLines []string) (bool, []string) {
-	var differences []string
+// Old compareWithGoldenData function removed - using compareWithParsedGoldenData instead
 
-	// Parse golden lines into expected morphemes
-	goldenMorphemes, err := parseGoldenLines(goldenLines)
-	if err != nil {
-		differences = append(differences, fmt.Sprintf("Failed to parse golden data: %v", err))
-		return false, differences
+func parseGoldenLines(lines []string) ([]ExpectedMorpheme, error) {
+	var morphemes []ExpectedMorpheme
+
+	for lineNum, line := range lines {
+		originalLine := line
+		trimmedLine := strings.TrimSpace(line)
+		
+		// Skip only truly empty lines and EOS markers
+		// Don't skip lines that start with tab (empty surface case)
+		if (trimmedLine == "" && !strings.HasPrefix(originalLine, "\t")) || trimmedLine == "EOS" {
+			continue
+		}
+
+		// Parse tab-separated line correctly
+		parts := strings.Split(originalLine, "\t")
+		
+		// Ensure we have at least 5 parts for a valid morpheme
+		if len(parts) < 5 {
+			// Log warning for debugging but continue with other lines
+			fmt.Printf("Warning: Skipping malformed golden line %d (expected ≥5 parts, got %d): %q\n", lineNum+1, len(parts), originalLine)
+			fmt.Printf("  Parts: %v\n", parts)
+			continue
+		}
+
+		morpheme := ExpectedMorpheme{
+			Surface:        parts[0], // 表層形 (can be empty string)
+			POS:            parts[1], // 品詞
+			NormalizedForm: parts[2], // 正規化形
+			DictionaryForm: parts[3], // 辞書形
+			Reading:        parts[4], // 読み形
+		}
+
+		morphemes = append(morphemes, morpheme)
 	}
+
+	return morphemes, nil
+}
+
+func compareWithParsedGoldenData(goMorphemes []ExpectedMorpheme, goldenMorphemes []ExpectedMorpheme) (bool, []string) {
+	var differences []string
 
 	// Check count
 	if len(goMorphemes) != len(goldenMorphemes) {
@@ -295,34 +337,6 @@ func compareWithGoldenData(goMorphemes []ExpectedMorpheme, goldenLines []string)
 	}
 
 	return len(differences) == 0, differences
-}
-
-func parseGoldenLines(lines []string) ([]ExpectedMorpheme, error) {
-	var morphemes []ExpectedMorpheme
-
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" || line == "EOS" {
-			continue
-		}
-
-		parts := strings.Split(line, "\t")
-		if len(parts) < 5 {
-			continue // Skip malformed lines
-		}
-
-		morpheme := ExpectedMorpheme{
-			Surface:        parts[0], // 表層形
-			POS:            parts[1], // 品詞
-			NormalizedForm: parts[2], // 正規化形
-			DictionaryForm: parts[3], // 辞書形
-			Reading:        parts[4], // 読み形
-		}
-
-		morphemes = append(morphemes, morpheme)
-	}
-
-	return morphemes, nil
 }
 
 func saveBocchanComparisonReport(summary *BocchanComparisonSummary, filename string) error {

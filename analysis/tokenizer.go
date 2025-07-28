@@ -543,9 +543,19 @@ func (t *Tokenizer) applySplitting(results *lattice.MorphemeList) (*lattice.Morp
 	return results.Split(lattice.Mode(t.mode), lexiconSet, t.inputBuffer, t.systemDict.Grammar())
 }
 
-// getSurfaceForm extracts the surface form for a node from original text
-// This matches Rust implementation: morpheme.surface() -> orig_slice(bytes_range())
+// getSurfaceForm extracts the surface form for a node
+// This matches Rust implementation: morpheme.surface() -> orig_slice(bytes_range()) for dictionary nodes,
+// curr_slice_c for OOV nodes (normalized/modified form)
 func (t *Tokenizer) getSurfaceForm(node *lattice.Node) (string, error) {
+	wordId := node.WordId()
+
+	// Check if this is an OOV node
+	if wordId.IsOOV() {
+		// For OOV nodes, use normalized/modified form (like Rust curr_slice_c)
+		return t.getModifiedForm(node)
+	}
+
+	// For dictionary nodes, use original form (like Rust orig_slice_c)
 	// Get byte range in modified text (equivalent to node.bytes_range() in Rust)
 	// This matches: morpheme.surface() -> node.bytes_range() -> orig_slice(bytes_range)
 	modifiedByteRange, err := node.BytesRange(t.inputBuffer)
@@ -636,8 +646,8 @@ func (t *Tokenizer) getDictionaryForm(node *lattice.Node) (string, error) {
 
 	// Check if this is an OOV node
 	if wordId.IsOOV() {
-		// For OOV nodes, use the surface form as dictionary form
-		return t.getSurfaceForm(node)
+		// For OOV nodes, use the normalized/modified form as dictionary form
+		return t.getModifiedForm(node)
 	}
 
 	// Get word info from the dictionary
@@ -664,14 +674,9 @@ func (t *Tokenizer) getReadingForm(node *lattice.Node) (string, error) {
 
 	// Check if this is an OOV node
 	if wordId.IsOOV() {
-		// For OOV nodes, use the surface form as reading form (matches Rust behavior)
-		// Rust version: For OOV words, the surface form is typically used as reading
-		surfaceForm, err := t.getSurfaceForm(node)
-		if err != nil {
-			return "", err
-		}
-		// Return the surface form as reading (this matches Rust OOV behavior)
-		return surfaceForm, nil
+		// For OOV nodes, use the normalized/modified form as reading form (matches Rust behavior)
+		// Rust version: For OOV words, the normalized form is used as reading
+		return t.getModifiedForm(node)
 	}
 
 	// Use LexiconSet for word info lookup (Rust compatible)
