@@ -772,16 +772,25 @@ func (t *Tokenizer) getPartOfSpeech(node *lattice.Node) ([]string, error) {
 			return []string{"名詞", "数詞", "*", "*", "*", "*"}, nil
 		}
 
-		// Determine POS based on available OOV providers (matching Rust behavior)
-		// If we have multiple OOV providers (including MeCab OOV), assume more sophisticated processing
-		oovProviders := t.pluginManager.oovProviders
-		if len(oovProviders) > 1 {
-			// When we have MeCab OOV plugin (first) + Simple OOV (last),
-			// use noun categorization for unknown words (matching expected behavior for English words)
-			return []string{"名詞", "普通名詞", "一般", "*", "*", "*"}, nil
+		// Extract POS ID from the OOV node's WordId (matching Rust behavior exactly)
+		// Rust: pos_id: inner.word_id().word() as u16
+		posID := uint16(node.WordId().Word())
+
+		// Get POS from grammar using the POS ID (matching Rust behavior)
+		grammar := t.systemDict.Grammar()
+		if grammar == nil {
+			return nil, fmt.Errorf("grammar is not available in system dictionary")
 		}
-		// Default OOV information for simple OOV only
-		return []string{"補助記号", "一般", "*", "*", "*", "*"}, nil
+
+		pos, err := grammar.GetPOS(posID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get POS for OOV POS ID %d: %w", posID, err)
+		}
+		if len(pos) == 0 {
+			return nil, fmt.Errorf("failed to resolve POS for OOV POS ID %d", posID)
+		}
+
+		return pos, nil
 	}
 
 	// Use LexiconSet for word info lookup (Rust compatible)
