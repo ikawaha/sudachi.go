@@ -205,17 +205,40 @@ func (p *MeCabOovPlugin) ProvideOOV(charPos int, buffer *input.InputBuffer, lat 
 		return createdWords, err
 	}
 
-	// Get character category
-	category := p.charCategory.GetCategory(char)
-	categoryInfo := p.charCategory.GetCategoryInfo(category)
+	// Get character categories (matching Rust: for ctype in input.cat_at_char(offset).iter())
+	categories := p.charCategory.GetCategory(char)
 
-	// Debug output removed - will use lattice dump instead
+	// Iterate over all individual category flags (matching Rust behavior exactly)
+	categoryIter := categories.Iter()
+	current := createdWords
 
-	// Skip if no category info or no unknown word definitions
-	if categoryInfo == nil || !p.unkDefs.HasDefinitions(category) {
-		return createdWords, nil
+	for {
+		category := categoryIter.Next()
+		if category == 0 {
+			break // No more categories
+		}
+
+		categoryInfo := p.charCategory.GetCategoryInfo(category)
+
+		// Skip if no category info or no unknown word definitions
+		if categoryInfo == nil || !p.unkDefs.HasDefinitions(category) {
+			continue
+		}
+
+		// Generate OOV nodes for this category (matching Rust pattern)
+		var err error
+		current, err = p.generateOOVForCategory(charPos, buffer, lat, current, category, categoryInfo)
+		if err != nil {
+			return current, err
+		}
 	}
 
+	return current, nil
+}
+
+// generateOOVForCategory generates OOV nodes for a specific category
+// This matches the Rust inner loop logic exactly
+func (p *MeCabOovPlugin) generateOOVForCategory(charPos int, buffer *input.InputBuffer, lat *lattice.Lattice, createdWords plugin.CreatedWords, category dic.CategoryType, categoryInfo *dic.CategoryInfo) (plugin.CreatedWords, error) {
 	// Generate OOV nodes for this category
 	definitions := p.unkDefs.GetDefinitions(category)
 	if len(definitions) == 0 {

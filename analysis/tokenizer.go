@@ -544,18 +544,12 @@ func (t *Tokenizer) applySplitting(results *lattice.MorphemeList) (*lattice.Morp
 }
 
 // getSurfaceForm extracts the surface form for a node
-// This matches Rust implementation: morpheme.surface() -> orig_slice(bytes_range()) for dictionary nodes,
-// curr_slice_c for OOV nodes (normalized/modified form)
+// This matches Rust implementation exactly: morpheme.surface() -> orig_slice(bytes_range()) for ALL nodes
+// Both dictionary and OOV nodes use original text (no normalization in surface)
 func (t *Tokenizer) getSurfaceForm(node *lattice.Node) (string, error) {
-	wordId := node.WordId()
+	// Rust version uses orig_slice(bytes_range()) for ALL morphemes (dictionary and OOV)
+	// This ensures surface always shows the original text, not normalized form
 
-	// Check if this is an OOV node
-	if wordId.IsOOV() {
-		// For OOV nodes, use normalized/modified form (like Rust curr_slice_c)
-		return t.getModifiedForm(node)
-	}
-
-	// For dictionary nodes, use original form (like Rust orig_slice_c)
 	// Get byte range in modified text (equivalent to node.bytes_range() in Rust)
 	// This matches: morpheme.surface() -> node.bytes_range() -> orig_slice(bytes_range)
 	modifiedByteRange, err := node.BytesRange(t.inputBuffer)
@@ -565,6 +559,7 @@ func (t *Tokenizer) getSurfaceForm(node *lattice.Node) (string, error) {
 
 	// Extract from original text using OrigSlice (equivalent to orig_slice() in Rust)
 	// This matches: orig_slice(bytes_range) -> to_orig(bytes_range) -> original[start..end]
+	// Works for both dictionary and OOV nodes - surface always shows original text
 	surfaceForm := t.inputBuffer.OrigSlice(modifiedByteRange)
 	// Note: empty string is valid for normalized characters (like full-width -> half-width)
 

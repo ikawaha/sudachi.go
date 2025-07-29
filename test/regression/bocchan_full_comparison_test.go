@@ -120,7 +120,7 @@ func runBocchanComparisonForMode(t *testing.T, tokenizer *analysis.Tokenizer, se
 
 		// Get expected golden lines for this sentence
 		goldenLines := getGoldenLinesForSentence(goldenData, i)
-		
+
 		// Parse golden lines before comparison
 		goldenMorphemes, err := parseGoldenLines(goldenLines)
 		if err != nil {
@@ -260,7 +260,7 @@ func parseGoldenLines(lines []string) ([]ExpectedMorpheme, error) {
 	for lineNum, line := range lines {
 		originalLine := line
 		trimmedLine := strings.TrimSpace(line)
-		
+
 		// Skip only truly empty lines and EOS markers
 		// Don't skip lines that start with tab (empty surface case)
 		if (trimmedLine == "" && !strings.HasPrefix(originalLine, "\t")) || trimmedLine == "EOS" {
@@ -269,7 +269,7 @@ func parseGoldenLines(lines []string) ([]ExpectedMorpheme, error) {
 
 		// Parse tab-separated line correctly
 		parts := strings.Split(originalLine, "\t")
-		
+
 		// Ensure we have at least 5 parts for a valid morpheme
 		if len(parts) < 5 {
 			// Log warning for debugging but continue with other lines

@@ -69,6 +69,37 @@ func (c CategoryType) IsNoOOVBOW() bool {
 	return c.HasFlag(CategoryNoOOVBOW)
 }
 
+// Iter returns an iterator that yields individual category flags
+// This matches Rust CategoryType::iter() behavior exactly
+func (c CategoryType) Iter() *CategoryIterator {
+	return &CategoryIterator{
+		remaining: c,
+		position:  0,
+	}
+}
+
+// CategoryIterator iterates over individual category flags
+// Matches Rust bitflags iterator behavior
+type CategoryIterator struct {
+	remaining CategoryType
+	position  uint32
+}
+
+// Next returns the next individual category flag or 0 if done
+// This matches Rust bitflags::Iter::next() behavior
+func (iter *CategoryIterator) Next() CategoryType {
+	// Find next set bit
+	for iter.position < 32 {
+		flag := CategoryType(1 << iter.position)
+		iter.position++
+
+		if iter.remaining.HasFlag(flag) {
+			return flag
+		}
+	}
+	return 0 // No more flags
+}
+
 // String returns the string representation of CategoryType
 func (c CategoryType) String() string {
 	// Handle empty category (0) as UNKNOWN, matching Rust behavior
