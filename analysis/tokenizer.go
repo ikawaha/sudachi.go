@@ -974,7 +974,12 @@ func (t *Tokenizer) dumpLattice() {
 		return costs
 	}
 
-	t.lattice.DumpWithDetails(getSurface, getPOS, getConnectionCosts)
+	// Pass lexicon set for accurate POS ID extraction (matching Rust behavior)
+	var lexiconSet *dic.LexiconSet
+	if t.systemDict != nil {
+		lexiconSet = t.systemDict.LexiconSet()
+	}
+	t.lattice.DumpWithDetails(getSurface, getPOS, getConnectionCosts, lexiconSet)
 }
 
 // dumpPath outputs path information in Rust-compatible format
@@ -1007,11 +1012,21 @@ func (t *Tokenizer) dumpPath(header string, nodeResults []*lattice.NodeResult) {
 			wordID = node.WordId().Word()
 		}
 
-		// Get total cost from the node result's cumulative cost
-		// In the optimal path, we need to calculate cumulative cost
-		totalCost := t.calculateCumulativeCost(nodeResults, i)
+		// Get POS ID (matching Rust format exactly)
+		var posID uint16 = 0
+		if t.systemDict != nil && t.systemDict.LexiconSet() != nil {
+			if node.WordId().IsOOV() {
+				// OOV nodes store the POS ID directly in their WordId
+				posID = uint16(node.WordId().Word())
+			} else {
+				// Dictionary nodes: get WordInfo from LexiconSet to access PosId
+				if wordInfo, err := t.systemDict.LexiconSet().GetWordInfo(node.WordId()); err == nil {
+					posID = wordInfo.PosId
+				}
+			}
+		}
 
-		// Format: path_index: begin_pos end_pos surface(dict_id, word_id) total_cost left_id right_id node_cost
+		// Format: path_index: begin_pos end_pos surface(dict_id, word_id) pos_id left_id right_id node_cost
 		fmt.Printf("%d: %d %d %s(%d, %d) %d %d %d %d\n",
 			i,
 			node.Begin(),
@@ -1019,7 +1034,7 @@ func (t *Tokenizer) dumpPath(header string, nodeResults []*lattice.NodeResult) {
 			surface,
 			dictID,
 			wordID,
-			totalCost,
+			posID, // Changed from totalCost to posID (matching Rust)
 			node.LeftId(),
 			node.RightId(),
 			node.Cost(),

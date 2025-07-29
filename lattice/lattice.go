@@ -277,92 +277,77 @@ func (l *Lattice) GetNodes(pos int) []*Node {
 
 // DumpWithDetails outputs the lattice in Rust-compatible debug format with full details
 // Format: node_id: begin end surface(dict_id, word_id) POS left_id right_id node_cost: connection_costs...
-func (l *Lattice) DumpWithDetails(getSurface func(*Node) string, getPOS func(*Node) string, getConnectionCosts func(*Node) []int) {
+func (l *Lattice) DumpWithDetails(getSurface func(*Node) string, getPOS func(*Node) string, getConnectionCosts func(*Node) []int, lexiconSet *dic.LexiconSet) {
 	fmt.Println("=== Lattice dump:")
 
-	// Collect all nodes from all positions (excluding BOS node at position 0)
-	var allNodes []*Node
-	for pos := 1; pos < len(l.endsFull); pos++ { // Start from 1 to skip BOS node like Rust
+	// Output nodes in Rust-compatible order: position reverse order, insertion order within position
+	// This exactly matches Rust's: for boundary in (0..self.indices.len()).rev() { for r_node in &self.ends_full[boundary] {
+	nodeID := 0
+	for pos := len(l.endsFull) - 1; pos >= 1; pos-- { // Reverse order, skip BOS at position 0
 		nodes := l.endsFull[pos]
-		for _, node := range nodes {
-			if node != nil {
-				allNodes = append(allNodes, node)
+		for _, node := range nodes { // Insertion order within position (word id order)
+			if node == nil {
+				continue
 			}
-		}
-	}
 
-	// Sort nodes in Rust-compatible order: end position (descending) → start position (ascending)
-	// This matches Rust's lattice dump ordering exactly
-	for i := 0; i < len(allNodes)-1; i++ {
-		for j := i + 1; j < len(allNodes); j++ {
-			// Primary sort: end position descending
-			if allNodes[i].End() < allNodes[j].End() {
-				allNodes[i], allNodes[j] = allNodes[j], allNodes[i]
-			} else if allNodes[i].End() == allNodes[j].End() {
-				// Secondary sort: start position ascending
-				if allNodes[i].Begin() > allNodes[j].Begin() {
-					allNodes[i], allNodes[j] = allNodes[j], allNodes[i]
+			// Get surface form
+			surface := "UNKNOWN"
+			if getSurface != nil {
+				surface = getSurface(node)
+			}
+
+			// Get dictionary ID and word ID from the node's WordId
+			var dictID int
+			var wordID uint32
+
+			if node.WordId().IsOOV() {
+				dictID = -1
+				wordID = node.WordId().Word()
+			} else {
+				dictID = 0 // System dictionary (assuming 0 for now)
+				wordID = node.WordId().Word()
+			}
+
+			// Get POS string (matching Rust format exactly)
+			var posString string = "UNKNOWN_POS"
+			if getPOS != nil {
+				posString = getPOS(node)
+			}
+
+			// Format matching Rust exactly: "{} {} {}{} {} {} {} {}"
+			// begin end surface(word_id) pos_string left_id right_id cost
+			fmt.Printf("%d: %d %d %s(%d, %d) %s %d %d %d:",
+				nodeID,
+				node.Begin(),
+				node.End(),
+				surface,
+				dictID,
+				wordID,
+				posString, // Changed back to posString (matching Rust)
+				node.LeftId(),
+				node.RightId(),
+				node.Cost(),
+			)
+
+			// Add connection costs
+			if getConnectionCosts != nil {
+				costs := getConnectionCosts(node)
+				for _, cost := range costs {
+					fmt.Printf(" %d", cost)
 				}
+			} else {
+				fmt.Printf(" COSTS_UNKNOWN")
 			}
+			fmt.Println()
+
+			nodeID++
 		}
-	}
-
-	// Output sorted nodes
-	for nodeID, node := range allNodes {
-		// Get surface form
-		surface := "UNKNOWN"
-		if getSurface != nil {
-			surface = getSurface(node)
-		}
-
-		// Get dictionary ID and word ID from the node's WordId
-		var dictID int
-		var wordID uint32
-
-		if node.WordId().IsOOV() {
-			dictID = -1
-			wordID = node.WordId().Word()
-		} else {
-			dictID = 0 // System dictionary (assuming 0 for now)
-			wordID = node.WordId().Word()
-		}
-
-		// Get POS string
-		posStr := "UNKNOWN_POS"
-		if getPOS != nil {
-			posStr = getPOS(node)
-		}
-
-		// Format: node_id: begin end surface(dict_id, word_id) POS left_id right_id node_cost: connection_costs...
-		fmt.Printf("%d: %d %d %s(%d, %d) %s %d %d %d:",
-			nodeID,
-			node.Begin(),
-			node.End(),
-			surface,
-			dictID,
-			wordID,
-			posStr,
-			node.LeftId(),
-			node.RightId(),
-			node.Cost(),
-		)
-
-		// Add connection costs
-		if getConnectionCosts != nil {
-			costs := getConnectionCosts(node)
-			for _, cost := range costs {
-				fmt.Printf(" %d", cost)
-			}
-		} else {
-			fmt.Printf(" COSTS_UNKNOWN")
-		}
-		fmt.Println()
 	}
 }
 
 // Dump outputs a basic lattice dump without detailed information
 func (l *Lattice) Dump() {
-	l.DumpWithDetails(nil, nil, nil)
+	l.DumpWithDetails(nil, nil, nil, nil)
 }
 
 // HasNodes returns true if there are nodes at the given position
@@ -379,4 +364,29 @@ func (l *Lattice) GetNodesAt(pos int) []*Node {
 		return nil
 	}
 	return l.endsFull[pos]
+}
+
+// extractPosIDFromNode extracts POS ID from node using lexicon access
+// This matches Rust's pos_id() method behavior exactly
+func extractPosIDFromNode(node *Node, getPOS func(*Node) string, lexiconSet *dic.LexiconSet) uint16 {
+	if lexiconSet == nil {
+		return 0
+	}
+
+	// For OOV nodes, use the POS ID stored in the word ID
+	if node.WordId().IsOOV() {
+		// OOV nodes store the POS ID directly in their WordId
+		// This matches Rust OOV handling exactly
+		return uint16(node.WordId().Word())
+	}
+
+	// For dictionary nodes, get WordInfo from LexiconSet to access PosId
+	wordInfo, err := lexiconSet.GetWordInfo(node.WordId())
+	if err != nil {
+		// Fallback to 0 if we can't get word info
+		return 0
+	}
+
+	// Return the actual POS ID from WordInfo (matching Rust behavior exactly)
+	return wordInfo.PosId
 }
