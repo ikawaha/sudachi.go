@@ -1,5 +1,7 @@
-sudachi.go
+贋作 Sudachi.go
 ===
 
-Sudachi.go is a Go port of sudachi.rs, a Japanese tokenizer originally implemented in Rust.
-This project brings the power of Sudachi to Go-based applications.
+Sudachi.go is an experimental Go port of sudachi.rs, a Japanese tokenizer originally implemented in Rust.
+
+Original: https://github.com/WorksApplications/sudachi.rs
+
