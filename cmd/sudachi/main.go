@@ -202,31 +202,10 @@ func newAnalyzeSplitted(output outputFormatter, dict *dic.SystemDictionary, cfg 
 	// Use default resource directory (same as regression tests)
 	resourceDir := "resources"
 
-	// Use LoadConfigFromResourceDir method (same as regression tests)
+	// Use LoadConfigFromResourceDir method (matching Rust behavior exactly)
 	builder, err := builder.LoadConfigFromResourceDir(resourceDir)
 	if err != nil {
-		if debug {
-			fmt.Fprintf(os.Stderr, "Failed to load config from resource dir %s: %v\n", resourceDir, err)
-			fmt.Fprintf(os.Stderr, "Falling back to simple tokenizer\n")
-		}
-		// Fallback to simple tokenizer
-		tokenizer, err := analysis.NewTokenizer(dict)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create tokenizer: %w", err)
-		}
-		tokenizer.SetMode(mode)
-		tokenizer.SetDebugMode(debug)
-
-		// Create sentence splitter with checker (fallback case)
-		splitter := sentence.NewSentenceSplitter().WithChecker(dict.LexiconSet())
-
-		return &analyzeSplitted{
-			output:    output,
-			tokenizer: tokenizer,
-			splitter:  splitter,
-			mode:      mode,
-			debug:     debug,
-		}, nil
+		return nil, fmt.Errorf("failed to load config from resource dir %s: %w", resourceDir, err)
 	}
 
 	tokenizer, err := builder.Build()

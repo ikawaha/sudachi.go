@@ -7,6 +7,7 @@ import (
 	"github.com/ikawaha/sudachi.go/input"
 	"github.com/ikawaha/sudachi.go/lattice"
 	"github.com/ikawaha/sudachi.go/plugin"
+	"github.com/ikawaha/sudachi.go/plugin/oov"
 	"github.com/ikawaha/sudachi.go/types"
 )
 
@@ -132,8 +133,16 @@ func (t *Tokenizer) buildLattice() error {
 			}
 		}
 
+		// If no words were created, try fallback OOV processing (matching Rust behavior)
 		if createdWords.IsEmpty() {
-			return fmt.Errorf("no words created at position %d", charPos)
+			err = t.generateFallbackOOV(charPos, &createdWords)
+			if err != nil {
+				return fmt.Errorf("failed to generate fallback OOV at position %d: %w", charPos, err)
+			}
+			// If still empty after fallback, return error
+			if createdWords.IsEmpty() {
+				return fmt.Errorf("no words created at position %d after fallback", charPos)
+			}
 		}
 	}
 
@@ -341,6 +350,7 @@ func (t *Tokenizer) generateFallbackOOV(charPos int, createdWords *types.Created
 	// Get the last OOV provider (matching Rust: let provider = self.oov_providers.last().unwrap())
 	lastProvider := t.pluginManager.GetLastOOVProvider()
 	if lastProvider == nil {
+		// Match Rust unwrap() behavior - return error when no providers available (Go convention)
 		return fmt.Errorf("no OOV providers available for fallback at position %d", charPos)
 	}
 
@@ -862,7 +872,13 @@ func (t *Tokenizer) SetMeCabOovPlugin(mecabPlugin any) {
 // SetSimpleOov switches to simple OOV mode
 func (t *Tokenizer) SetSimpleOov() {
 	t.useSimpleOov = true
-	// mecabOovPlugin removed
+
+	// Add SimpleOOV plugin as fallback provider
+	simpleOovPlugin := oov.NewSimpleOovPlugin()
+	err := simpleOovPlugin.SetUp(nil, "", t.systemDict.Grammar())
+	if err == nil {
+		t.pluginManager.AddOOVProvider(simpleOovPlugin)
+	}
 }
 
 // SetCharacterCategory sets the character category system (for simple OOV mode)
@@ -1052,15 +1068,16 @@ func (t *Tokenizer) dumpPath(header string, nodeResults []*lattice.NodeResult) {
 }
 
 // calculateCumulativeCost calculates the cumulative cost up to the given node index in the optimal path
-func (t *Tokenizer) calculateCumulativeCost(nodeResults []*lattice.NodeResult, nodeIndex int) int32 {
+// Returns error if connection matrix is unavailable (matching Rust UB behavior)
+func (t *Tokenizer) calculateCumulativeCost(nodeResults []*lattice.NodeResult, nodeIndex int) (int32, error) {
 	if nodeIndex < 0 || nodeIndex >= len(nodeResults) {
-		return 0
+		return 0, nil
 	}
 
 	// Get connection matrix for cost calculation
 	connMatrix := t.systemDict.Grammar().ConnectionMatrix()
 	if connMatrix == nil {
-		return 0 // Fallback
+		return 0, fmt.Errorf("connection matrix is unavailable - cannot calculate cumulative cost")
 	}
 
 	var cumulativeCost int32 = 0
@@ -1084,7 +1101,7 @@ func (t *Tokenizer) calculateCumulativeCost(nodeResults []*lattice.NodeResult, n
 		}
 	}
 
-	return cumulativeCost
+	return cumulativeCost, nil
 }
 
 // createDefaultNormalizer creates a normalizer with default Sudachi rewrite.def
